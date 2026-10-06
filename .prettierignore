@@ -1,0 +1,11 @@
+dist
+coverage
+node_modules
+package-lock.json
+
+# Spec and working documents — these are hand-written and shouldn't be
+# reflowed by a formatter run.
+CLAUDE.md
+PLAN.md
+NOTES.md
+.claude

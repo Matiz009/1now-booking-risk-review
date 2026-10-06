@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+/* Tailwind v4 is configured in CSS, not a JS config file.
+   @theme adds design tokens; each one also becomes a utility class. */
+@theme {
+  --color-risk-low: oklch(0.63 0.14 150);
+  --color-risk-medium: oklch(0.72 0.15 75);
+  --color-risk-high: oklch(0.6 0.2 25);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  /* One consistent focus ring everywhere, so keyboard users are never lost. */
+  :focus-visible {
+    @apply ring-2 ring-slate-900 ring-offset-2 ring-offset-slate-50 outline-none;
+  }
+}
