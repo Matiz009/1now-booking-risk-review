@@ -60,7 +60,7 @@ export function DevPanel({
     >
       <details open={isOpen} onToggle={(event) => onOpenChange(event.currentTarget.open)}>
         <summary className="cursor-pointer rounded-md px-3 py-2">
-          <h2 id={`${id}-heading`} className="inline text-sm font-semibold text-amber-900">
+          <h2 id={`${id}-heading`} className="inline text-sm font-bold text-amber-900">
             Demo controls
           </h2>
         </summary>

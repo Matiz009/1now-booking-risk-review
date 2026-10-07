@@ -1,11 +1,36 @@
 @import 'tailwindcss';
 
 /* Tailwind v4 is configured in CSS, not a JS config file.
-   @theme adds design tokens; each one also becomes a utility class. */
+   @theme adds design tokens; each one also becomes a utility class
+   (--color-ink → text-ink / bg-ink, --radius-card → rounded-card, and so on). */
 @theme {
   --color-risk-low: oklch(0.63 0.14 150);
   --color-risk-medium: oklch(0.72 0.15 75);
   --color-risk-high: oklch(0.6 0.2 25);
+
+  /* 1Now brand tokens. */
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Orange is only for primary buttons, the active tab and links, and always
+     carries ink text: white on #FE7743 is 2.65:1 (fails AA), ink is 5.85:1. */
+  --color-primary: #fe7743;
+  --color-primary-hover: #f2602a; /* ink on it: 4.78:1 */
+  --color-primary-soft: rgb(254 119 67 / 0.16);
+  --color-primary-border: #fdc5ad;
+
+  --color-canvas-alt: #faf8f4;
+  --color-surface-alt: #f6f4f0;
+  --color-line: #e6e2da;
+  --color-line-strong: #d6d1c7;
+
+  --color-ink: #14253a;
+  --color-muted: #55677a;
+  /* 1Now's #7B8794 is 3.66:1 on white, so darkened to pass 4.5:1 on every background. */
+  --color-subtle: #67717c;
+
+  --radius-card: 16px;
+  --shadow-card: 0 8px 48px rgb(20 37 58 / 0.1);
 }
 
 @layer base {
@@ -17,16 +42,34 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-canvas-alt text-ink font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
   }
 
   /* One consistent focus ring everywhere, so keyboard users are never lost.
      It is a real outline, not a box-shadow ring: outlines draw on every element
      (box-shadow does nothing on a <tr>) and survive Windows high-contrast mode.
+     It stays ink, not orange: orange on white is under the 3:1 non-text minimum.
      Don't add outline-none here: in Tailwind v4 it sets --tw-outline-style to
      none, which silently cancels every focus-visible:outline-* utility. */
   :focus-visible {
-    outline: 2px solid var(--color-slate-900);
+    outline: 2px solid var(--color-ink);
     outline-offset: 2px;
+  }
+
+  /* Honour the OS "reduce motion" setting: no colour fades or pulsing skeletons. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

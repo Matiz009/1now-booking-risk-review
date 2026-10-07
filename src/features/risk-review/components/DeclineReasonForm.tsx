@@ -38,7 +38,7 @@ export function DeclineReasonForm({ isPending, onSubmit, onCancel }: DeclineReas
       noValidate
       className="space-y-2 rounded-md border border-red-200 bg-red-50/50 p-3"
     >
-      <label htmlFor={`${id}-reason`} className="block text-sm font-medium text-slate-900">
+      <label htmlFor={`${id}-reason`} className="text-ink block text-sm font-medium">
         Reason for declining
       </label>
       <textarea
@@ -53,11 +53,11 @@ export function DeclineReasonForm({ isPending, onSubmit, onCancel }: DeclineReas
         aria-invalid={hasError}
         aria-describedby={`${id}-count${hasError ? ` ${id}-error` : ''}`}
         className={cn(
-          'block w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900',
-          hasError ? 'border-red-600' : 'border-slate-300',
+          'text-ink block w-full rounded-md border bg-white px-3 py-2 text-sm',
+          hasError ? 'border-red-600' : 'border-line-strong',
         )}
       />
-      <p id={`${id}-count`} className="text-xs text-slate-600 tabular-nums">
+      <p id={`${id}-count`} className="text-muted text-xs tabular-nums">
         {length} / {DECLINE_REASON_MIN_LENGTH} characters minimum
       </p>
       {hasError && (

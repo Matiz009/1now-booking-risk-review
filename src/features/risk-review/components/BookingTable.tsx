@@ -25,10 +25,10 @@ type BookingTableProps = {
 export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTableProps) {
   return (
     <>
-      <div className="hidden overflow-hidden rounded-lg border border-slate-200 bg-white md:block">
+      <div className="rounded-card border-line shadow-card hidden overflow-hidden border bg-white md:block">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">{caption}. Select a renter to review the booking.</caption>
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-600">
+          <thead className="border-line bg-surface-alt text-muted border-b text-xs font-medium">
             <tr>
               <th scope="col" className="px-4 py-3">
                 Risk
@@ -50,14 +50,14 @@ export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTa
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-line divide-y">
             {items.map(({ booking, risk }) => (
               // The whole row is a mouse target. The renter button below is the one
               // keyboard and screen-reader entry point, so each row is one Tab stop.
               <tr
                 key={booking.id}
                 onClick={() => onSelect(booking.id)}
-                className="cursor-pointer hover:bg-slate-50"
+                className="hover:bg-surface-alt cursor-pointer"
               >
                 <td className="px-4 py-3">
                   <RiskBadge risk={risk} />
@@ -69,15 +69,15 @@ export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTa
                   <button
                     type="button"
                     data-review-trigger={booking.id}
-                    className="mb-1.5 rounded-sm text-left font-medium text-slate-900 hover:underline"
+                    className="text-ink decoration-primary mb-1.5 rounded-sm text-left font-medium decoration-2 underline-offset-4 hover:underline"
                   >
                     {booking.renter.fullName}
                   </button>
-                  <div className="text-xs text-slate-500">{booking.id}</div>
+                  <div className="text-subtle text-xs">{booking.id}</div>
                 </td>
-                <td className="px-4 py-3 text-slate-700">{carName(booking)}</td>
-                <td className="px-4 py-3 text-slate-700">{tripDates(booking)}</td>
-                <td className="px-4 py-3 text-right font-medium text-slate-900 tabular-nums">
+                <td className="text-muted px-4 py-3">{carName(booking)}</td>
+                <td className="text-muted px-4 py-3">{tripDates(booking)}</td>
+                <td className="text-ink px-4 py-3 text-right font-medium tabular-nums">
                   {formatCurrency(booking.totalAmount)}
                 </td>
                 <td className="px-4 py-3">
@@ -96,7 +96,7 @@ export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTa
               type="button"
               data-review-trigger={booking.id}
               onClick={() => onSelect(booking.id)}
-              className="block w-full rounded-lg border border-slate-200 bg-white p-4 text-left hover:border-slate-300"
+              className="rounded-card border-line shadow-card hover:border-primary-border block w-full border bg-white p-4 text-left"
             >
               <span className="flex flex-wrap items-center justify-between gap-2">
                 <RiskBadge risk={risk} />
@@ -104,19 +104,17 @@ export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTa
               </span>
               <span className="mt-3 flex items-baseline justify-between gap-3">
                 <span className="min-w-0">
-                  <span className="block font-medium break-words text-slate-900">
+                  <span className="text-ink block font-medium break-words">
                     {booking.renter.fullName}
                   </span>
-                  <span className="block text-xs text-slate-500">{booking.id}</span>
+                  <span className="text-subtle block text-xs">{booking.id}</span>
                 </span>
-                <span className="shrink-0 font-medium text-slate-900 tabular-nums">
+                <span className="text-ink shrink-0 font-medium tabular-nums">
                   {formatCurrency(booking.totalAmount)}
                 </span>
               </span>
-              <span className="mt-2 block text-sm break-words text-slate-700">
-                {carName(booking)}
-              </span>
-              <span className="block text-sm text-slate-600">{tripDates(booking)}</span>
+              <span className="text-muted mt-2 block text-sm break-words">{carName(booking)}</span>
+              <span className="text-muted block text-sm">{tripDates(booking)}</span>
             </button>
           </li>
         ))}
@@ -134,7 +132,7 @@ function StatusCell({ booking, isPending }: StatusCellProps) {
   return (
     <span className="inline-flex items-center gap-2">
       <StatusBadge status={booking.status} />
-      {isPending && <span className="text-xs text-slate-500">Saving…</span>}
+      {isPending && <span className="text-subtle text-xs">Saving…</span>}
     </span>
   );
 }

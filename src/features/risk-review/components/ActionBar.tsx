@@ -74,7 +74,7 @@ export function ActionBar({
       </div>
 
       {approveBlocked && options.includes('approved') && (
-        <p id={`${id}-blocked`} className="text-sm text-slate-700">
+        <p id={`${id}-blocked`} className="text-muted text-sm">
           {approveBlocked}
         </p>
       )}

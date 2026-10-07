@@ -50,7 +50,7 @@ export function ReviewDrawer({
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-900/40" />
+        <Dialog.Overlay className="bg-ink/40 fixed inset-0 z-40" />
         <Dialog.Content
           // Radix hides the rest of the page from screen readers but doesn't
           // set this, so say it explicitly: everything else is out of reach.
@@ -65,7 +65,7 @@ export function ReviewDrawer({
           // overlay, a toast or the demo controls) must never throw away a
           // half-typed decline reason.
           onInteractOutside={(event) => event.preventDefault()}
-          className="fixed inset-0 z-40 flex flex-col bg-white shadow-xl md:inset-y-0 md:right-0 md:left-auto md:w-[30rem] md:border-l md:border-slate-200"
+          className="md:rounded-l-card md:border-line fixed inset-0 z-40 flex flex-col bg-white shadow-xl md:inset-y-0 md:right-0 md:left-auto md:w-[30rem] md:border-l"
         >
           {/* `key` remounts the body per booking, so its local state starts fresh. */}
           {item && (
@@ -121,29 +121,29 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
 
   return (
     <>
-      <header className="flex items-start justify-between gap-3 border-b border-slate-200 p-4">
+      <header className="border-line flex items-start justify-between gap-3 border-b p-4">
         <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-500">{booking.id}</p>
-          <Dialog.Title className="text-lg font-semibold break-words text-slate-900">
+          <p className="text-subtle text-xs font-medium">{booking.id}</p>
+          <Dialog.Title className="text-ink text-lg font-bold break-words">
             {booking.renter.fullName}
           </Dialog.Title>
-          <Dialog.Description className="text-sm break-words text-slate-600">
+          <Dialog.Description className="text-muted text-sm break-words">
             {carName(booking)} · {tripDates(booking)}
           </Dialog.Description>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <StatusBadge status={booking.status} />
-            <span className="text-slate-700">
+            <span className="text-muted">
               Total{' '}
-              <span className="font-semibold text-slate-900 tabular-nums">
+              <span className="text-ink font-semibold tabular-nums">
                 {formatCurrency(booking.totalAmount)}
               </span>
             </span>
-            {isPending && <span className="text-xs text-slate-500">Saving…</span>}
+            {isPending && <span className="text-subtle text-xs">Saving…</span>}
           </div>
         </div>
         <Dialog.Close
           aria-label="Close review"
-          className="-mt-1 -mr-1 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-xl leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+          className="text-subtle hover:bg-surface-alt hover:text-ink -mt-1 -mr-1 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-xl leading-none"
         >
           <span aria-hidden="true">×</span>
         </Dialog.Close>
@@ -151,17 +151,17 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
 
       <div className="flex-1 space-y-6 overflow-y-auto p-4">
         <section aria-labelledby={`${id}-risk`} className="space-y-3">
-          <h3 id={`${id}-risk`} className="text-sm font-semibold text-slate-900">
+          <h3 id={`${id}-risk`} className="text-ink text-sm font-bold">
             Risk
           </h3>
           {risk.level === 'unscored' ? (
             <>
-              <p className="text-sm font-medium text-slate-900">Risk score pending ID check</p>
-              <dl className="divide-y divide-slate-100 rounded-md border border-slate-200 text-sm">
+              <p className="text-ink text-sm font-medium">Risk score pending ID check</p>
+              <dl className="divide-line border-line divide-y rounded-md border text-sm">
                 {bookingFacts(booking).map((fact) => (
                   <div key={fact.label} className="flex justify-between gap-3 px-3 py-2">
-                    <dt className="text-slate-600">{fact.label}</dt>
-                    <dd className="text-right font-medium text-slate-900">{fact.value}</dd>
+                    <dt className="text-muted">{fact.label}</dt>
+                    <dd className="text-ink text-right font-medium">{fact.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -170,16 +170,16 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
             <>
               <div className="flex flex-wrap items-center gap-3">
                 <RiskBadge risk={risk} />
-                <span className="text-sm text-slate-700">
+                <span className="text-muted text-sm">
                   Score{' '}
-                  <span className="font-semibold text-slate-900 tabular-nums">
+                  <span className="text-ink font-semibold tabular-nums">
                     {risk.score} / {MAX_SCORE}
                   </span>
                 </span>
               </div>
               {/* Otherwise the points listed below wouldn't add up to the score. */}
               {signalTotal > MAX_SCORE && (
-                <p className="text-sm text-slate-600">
+                <p className="text-muted text-sm">
                   Signals total {signalTotal} · score capped at {MAX_SCORE}
                 </p>
               )}
@@ -192,10 +192,10 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
 
         {isFinal && (
           <section aria-labelledby={`${id}-decision`} className="space-y-1">
-            <h3 id={`${id}-decision`} className="text-sm font-semibold text-slate-900">
+            <h3 id={`${id}-decision`} className="text-ink text-sm font-bold">
               Decided
             </h3>
-            <p className="text-sm text-slate-700">
+            <p className="text-muted text-sm">
               {STATUS_LABELS[booking.status]}
               {booking.decidedAt && (
                 <>
@@ -208,8 +208,8 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
               . This decision is final.
             </p>
             {booking.declineReason && (
-              <p className="text-sm text-slate-700">
-                <span className="font-medium text-slate-900">Reason: </span>
+              <p className="text-muted text-sm">
+                <span className="text-ink font-medium">Reason: </span>
                 {booking.declineReason}
               </p>
             )}
@@ -219,7 +219,7 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
 
       {!isFinal && (
         // pb-24 below md keeps a 12px gap between the actions and the collapsed demo controls.
-        <footer className="space-y-3 border-t border-slate-200 p-4 pb-24 md:pb-4">
+        <footer className="border-line space-y-3 border-t p-4 pb-24 md:pb-4">
           {error && (
             <p
               role="alert"

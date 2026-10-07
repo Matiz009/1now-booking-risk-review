@@ -20,8 +20,8 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
       <p id={`${id}-label`} className="text-xs font-medium text-indigo-800">
         Suggested action · rule-based
       </p>
-      <p className="mt-1 text-base font-semibold text-slate-900">{recommendation.headline}</p>
-      <p className="mt-0.5 text-sm text-slate-700">{recommendation.rationale}</p>
+      <p className="text-ink mt-1 text-base font-semibold">{recommendation.headline}</p>
+      <p className="text-muted mt-0.5 text-sm">{recommendation.rationale}</p>
     </section>
   );
 }

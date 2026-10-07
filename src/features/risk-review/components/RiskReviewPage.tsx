@@ -225,7 +225,7 @@ export function RiskReviewPage() {
               <>
                 {/* Every tab is sorted the same way, but the order only drives work in Needs review. */}
                 {activeTab === 'needs_review' && (
-                  <p className="mb-3 text-sm text-slate-600">
+                  <p className="text-muted mb-3 text-sm">
                     Sorted by risk · bookings awaiting ID checks first
                   </p>
                 )}

@@ -4,8 +4,9 @@ import { cn } from '@/lib/cn';
 type ButtonVariant = 'primary' | 'secondary' | 'danger';
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'border-transparent bg-slate-900 text-white hover:bg-slate-700',
-  secondary: 'border-slate-300 bg-white text-slate-900 hover:bg-slate-50',
+  // Ink text, not white: white on the brand orange is only 2.65:1.
+  primary: 'border-transparent bg-primary text-ink hover:bg-primary-hover',
+  secondary: 'border-line-strong bg-white text-ink hover:bg-surface-alt',
   danger: 'border-transparent bg-red-700 text-white hover:bg-red-800',
 };
 
@@ -28,7 +29,7 @@ export function Button({
       // Defaults to "button" so it never submits a surrounding form by accident.
       type={type}
       className={cn(
-        'inline-flex min-h-9 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
+        'inline-flex min-h-9 items-center justify-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-50',
         VARIANT_CLASSES[variant],
         className,

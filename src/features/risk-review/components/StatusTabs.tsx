@@ -33,7 +33,7 @@ export function StatusTabs({ active, counts, onChange, panelId }: StatusTabsProp
     <div
       role="tablist"
       aria-label="Booking status"
-      className="grid auto-rows-fr grid-cols-2 gap-1 rounded-lg bg-slate-200/70 p-1 sm:flex"
+      className="bg-surface-alt ring-line grid auto-rows-fr grid-cols-2 gap-1 rounded-lg p-1 ring-1 ring-inset sm:flex"
     >
       {STATUS_ORDER.map((status, index) => {
         const isActive = status === active;
@@ -54,15 +54,15 @@ export function StatusTabs({ active, counts, onChange, panelId }: StatusTabsProp
             className={cn(
               'flex items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm font-medium sm:justify-start',
               isActive
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:bg-white/60 hover:text-slate-900',
+                ? 'bg-primary text-ink shadow-sm'
+                : 'text-muted hover:text-ink hover:bg-white',
             )}
           >
             {STATUS_LABELS[status]}{' '}
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-xs tabular-nums',
-                isActive ? 'bg-slate-900 text-white' : 'bg-slate-300/70 text-slate-700',
+                isActive ? 'text-ink bg-white/70' : 'text-muted bg-white',
               )}
             >
               {counts[status]}

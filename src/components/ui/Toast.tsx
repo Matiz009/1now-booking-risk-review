@@ -13,7 +13,7 @@ export const TOAST_DURATION_MS = 5000;
 const TONE_CLASSES: Record<ToastMessage['tone'], string> = {
   success: 'border-l-emerald-600',
   error: 'border-l-red-600',
-  info: 'border-l-slate-500',
+  info: 'border-l-subtle',
 };
 
 const TONE_LABELS: Record<ToastMessage['tone'], string> = {
@@ -98,11 +98,11 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
       onFocus={() => setIsFocused(true)}
       onBlur={handleBlur}
       className={cn(
-        'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-md border border-l-4 border-slate-200 bg-white p-3 shadow-lg',
+        'border-line pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-md border border-l-4 bg-white p-3 shadow-lg',
         TONE_CLASSES[toast.tone],
       )}
     >
-      <p className="flex-1 text-sm text-slate-900">
+      <p className="text-ink flex-1 text-sm">
         <span className="font-semibold">{TONE_LABELS[toast.tone]}: </span>
         {toast.message}
       </p>
@@ -110,7 +110,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         type="button"
         aria-label="Dismiss notification"
         onClick={() => onDismiss(toast.id)}
-        className="-my-1.5 -mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded text-lg leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+        className="text-subtle hover:bg-surface-alt hover:text-ink -my-1.5 -mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded text-lg leading-none"
       >
         <span aria-hidden="true">×</span>
       </button>
