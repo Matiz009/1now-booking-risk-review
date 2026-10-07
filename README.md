@@ -2,7 +2,7 @@
 
 A fraud-review queue for direct car rental bookings, built as a take-home for 1Now.
 
-**Live demo:** [LIVE DEMO LINK] · **Walkthrough:** [LOOM LINK]
+**Live demo:** https://1now-booking-risk-review.vercel.app/ · **Walkthrough:** [LOOM LINK]
 
 **How I directed Claude Code:** [CLAUDE.md](CLAUDE.md) (rules), [PLAN.md](PLAN.md) (phases), [JOURNEY.md](JOURNEY.md) (what went wrong and how I steered).
 
@@ -14,7 +14,7 @@ On Turo, the marketplace screens renters for fraud. An operator who takes bookin
 
 A review queue. Every new direct booking gets a risk score from a rule-based engine, along with the signals behind it and a recommended action. The operator makes the final call: **Approve**, **Request verification** or **Decline** (with a required reason). This mirrors the recommend-then-approve pattern of 1Now's Carisma "Gatekeeper": the system suggests, and the operator decides.
 
-[SCREENSHOT]
+![The review queue with booking BK-1007 open: high risk, score 65, four signals, and a suggestion to request verification](docs/screenshot.png)
 
 ## 3. How it works
 

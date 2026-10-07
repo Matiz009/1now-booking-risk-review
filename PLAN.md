@@ -98,8 +98,7 @@ For every next phase: `Phase N. Follow CLAUDE.md. List the files first, then bui
 
 **You do:**
 
-- [ ] Add one real host quote from r/turo about fraud or bad renters (by hand)
-- [ ] Write the "Where I corrected Claude Code" section from `NOTES.md`, in your own words
+- [ ] Write the "Where I corrected Claude Code" section from `JOURNEY.md`, in your own words
 - [ ] Review `git log`: small, clear commits
 
 **Stretch (only if everything above is done):** threshold sliders in a rules panel → undo toast → do-not-rent list.
