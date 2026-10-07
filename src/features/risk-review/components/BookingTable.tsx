@@ -1,4 +1,5 @@
-import { formatCurrency, formatDateRange } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
+import { carName, tripDates } from '../lib/bookingText';
 import type { Booking, ScoredBooking } from '../types';
 import { RiskBadge } from './RiskBadge';
 import { StatusBadge } from './StatusBadge';
@@ -13,7 +14,10 @@ type BookingTableProps = {
 };
 
 /**
- * One list, two layouts. Both are in the DOM and CSS shows one: the table
+ * One list, two layouts.
+ *
+ * `data-review-trigger` marks the control that opens each booking, so the page
+ * can hand focus back to it when the review drawer closes. Both are in the DOM and CSS shows one: the table
  * from `md` up (`hidden md:block`), the stacked cards below it (`md:hidden`).
  * That avoids JavaScript screen-size checks and keeps 360px free of
  * horizontal scrolling.
@@ -64,6 +68,7 @@ export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTa
                       mb-1.5 keeps its focus outline (2px + 2px offset) clear of the id line. */}
                   <button
                     type="button"
+                    data-review-trigger={booking.id}
                     className="mb-1.5 rounded-sm text-left font-medium text-slate-900 hover:underline"
                   >
                     {booking.renter.fullName}
@@ -89,6 +94,7 @@ export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTa
           <li key={booking.id}>
             <button
               type="button"
+              data-review-trigger={booking.id}
               onClick={() => onSelect(booking.id)}
               className="block w-full rounded-lg border border-slate-200 bg-white p-4 text-left hover:border-slate-300"
             >
@@ -131,12 +137,4 @@ function StatusCell({ booking, isPending }: StatusCellProps) {
       {isPending && <span className="text-xs text-slate-500">Saving…</span>}
     </span>
   );
-}
-
-function carName({ car }: Booking): string {
-  return `${car.year} ${car.make} ${car.model}`;
-}
-
-function tripDates(booking: Booking): string {
-  return formatDateRange(new Date(booking.pickupAt), new Date(booking.returnAt));
 }

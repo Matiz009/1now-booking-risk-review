@@ -139,8 +139,8 @@ function collectSignals(booking: Booking): RiskSignal[] {
   return signals.sort((a, b) => b.points - a.points);
 }
 
-/** 1 → "1 day", 2.6 → "2 days", 0.4 → "less than a day". */
-function describeDays(days: number): string {
+/** 1 → "1 day", 2.6 → "2 days", 0.4 → "less than a day". Also used by bookingFacts. */
+export function describeDays(days: number): string {
   const whole = Math.floor(days);
   if (whole < 1) {
     return 'less than a day';
@@ -148,8 +148,8 @@ function describeDays(days: number): string {
   return whole === 1 ? '1 day' : `${whole} days`;
 }
 
-/** 45 → "45 minutes", 90 → "1.5 hours", 120 → "2 hours". */
-function describeMinutes(minutes: number): string {
+/** 45 → "45 minutes", 90 → "1.5 hours", 120 → "2 hours". Also used by bookingFacts. */
+export function describeMinutes(minutes: number): string {
   if (minutes < 60) {
     return `${Math.round(minutes)} minutes`;
   }

@@ -136,7 +136,7 @@ export type LoadStatus = 'loading' | 'ready' | 'error';
  */
 export type UpdateOutcome = {
   ok: boolean;
-  /** Ready to show, e.g. "Booking BK-1042 declined." or "Couldn't decline BK-1042. Change reverted." */
+  /** Ready to show, e.g. "BK-1042 declined." or "Couldn't decline BK-1042. Change reverted." */
   message: string;
 };
 
@@ -146,6 +146,8 @@ export type ApiConfig = {
   delayMs: number;
   /** Every getBookings call rejects. */
   failLoad: boolean;
+  /** Every getBookings call resolves with no bookings, to show the empty state. */
+  returnEmpty: boolean;
   /** Every updateBookingStatus call rejects. */
   failUpdate: boolean;
   /** Only updates to these booking ids reject. For testing one failure among several. */

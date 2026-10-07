@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RiskResult, RiskSignal } from '../types';
-import { recommendAction } from './recommendAction';
+import { approveBlockedReason, recommendAction } from './recommendAction';
 import { riskLevelFor } from './scoreBooking';
 
 /**
@@ -69,5 +69,21 @@ describe('recommendAction', () => {
       expect(headline.length).toBeGreaterThan(0);
       expect(rationale.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('approveBlockedReason', () => {
+  it('blocks Approve while the ID check is pending', () => {
+    const recommendation = recommendAction({ score: 0, level: 'unscored', signals: [] });
+
+    expect(approveBlockedReason(recommendation)).toBe(
+      'Approve is unavailable until the ID check returns.',
+    );
+  });
+
+  it('allows Approve for every scored booking, even one recommended for decline', () => {
+    expect(approveBlockedReason(recommendAction(riskWithScore(0)))).toBeNull();
+    expect(approveBlockedReason(recommendAction(riskWithScore(45)))).toBeNull();
+    expect(approveBlockedReason(recommendAction(riskWithScore(100, [idFailed])))).toBeNull();
   });
 });

@@ -87,8 +87,7 @@ describe('RiskReviewPage', () => {
     renterButton.focus();
     await user.keyboard('{Enter}');
 
-    // Placeholder until Phase 5: selecting a booking announces it in a toast.
-    expect(await screen.findByText(/Review drawer for BK-1009/)).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Noor Haddad' })).toBeInTheDocument();
   });
 
   it('opens each booking exactly once when its renter button is clicked', async () => {
@@ -96,10 +95,11 @@ describe('RiskReviewPage', () => {
     await renderLoaded();
     const table = screen.getByRole('table');
 
-    await user.click(within(table).getAllByRole('button')[1]!);
+    await user.click(within(table).getByRole('button', { name: 'Victor Sandoval' }));
 
     // The click bubbles to the row's handler; it must not also fire a second time.
-    expect(screen.getAllByText(/Review drawer for BK-1010/)).toHaveLength(1);
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.getByRole('dialog', { name: 'Victor Sandoval' })).toBeInTheDocument();
   });
 
   it('explains the queue order above the list', async () => {
@@ -164,7 +164,10 @@ describe('RiskReviewPage', () => {
 
     const alert = await screen.findByRole('alert');
     expect(within(alert).getByRole('heading', { name: 'Couldn’t load bookings' })).toBeVisible();
-    expect(within(alert).getByText('Check your connection and try again.')).toBeVisible();
+    // The hook's loadError, shown as the message.
+    expect(
+      within(alert).getByText('The server didn’t respond. Check your connection and try again.'),
+    ).toBeVisible();
 
     configureApi({ failLoad: false });
     await user.click(within(alert).getByRole('button', { name: 'Retry' }));
@@ -184,5 +187,20 @@ describe('RiskReviewPage', () => {
     await user.click(within(demo).getByRole('button', { name: 'Reload data' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Couldn’t load bookings');
+  });
+
+  it('lets the demo controls load an empty queue, and reload the sample data', async () => {
+    const user = userEvent.setup();
+    await renderLoaded();
+    const demo = screen.getByRole('complementary', { name: 'Demo controls' });
+
+    await user.click(within(demo).getByRole('button', { name: 'Load empty data' }));
+
+    expect(await screen.findByRole('heading', { name: 'Nothing to review' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Needs review 0' })).toBeInTheDocument();
+
+    await user.click(within(demo).getByRole('button', { name: 'Reload data' }));
+
+    expect(await screen.findByRole('tab', { name: 'Needs review 9' })).toBeInTheDocument();
   });
 });

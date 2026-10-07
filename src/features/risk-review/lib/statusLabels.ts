@@ -16,6 +16,14 @@ export const STATUS_LABELS: Record<BookingStatus, string> = {
   declined: 'Declined',
 };
 
+/** The button that moves a booking to each status. */
+export const ACTION_LABELS: Record<BookingStatus, string> = {
+  needs_review: 'Move back to review',
+  verification_requested: 'Request verification',
+  approved: 'Approve',
+  declined: 'Decline',
+};
+
 /** The DOM id of a status tab, so the tab panel can point back at it with aria-labelledby. */
 export function statusTabId(status: BookingStatus): string {
   return `status-tab-${status}`;

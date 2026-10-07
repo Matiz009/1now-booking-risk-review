@@ -53,7 +53,7 @@ describe('useBookings: loading', () => {
     const { result } = renderHook(() => useBookings());
 
     await waitFor(() => expect(result.current.loadStatus).toBe('error'));
-    expect(result.current.loadError).toMatch(/couldn’t load bookings/i);
+    expect(result.current.loadError).toMatch(/server didn’t respond/i);
 
     configureApi({ failLoad: false });
     act(() => result.current.reload());
@@ -83,7 +83,7 @@ describe('useBookings: optimistic updates', () => {
       outcome = await pending;
     });
 
-    expect(outcome).toEqual({ ok: true, message: 'Booking BK-1001 approved.' });
+    expect(outcome).toEqual({ ok: true, message: 'BK-1001 approved.' });
     expect(statusOf(result, 'BK-1001')).toBe('approved');
     expect(result.current.pendingIds).toEqual([]);
 

@@ -69,9 +69,25 @@ export function DevPanel({ settings, onChange, onReload }: DevPanelProps) {
           </select>
         </div>
 
-        <Button onClick={onReload} className="sm:ml-auto">
-          Reload data
-        </Button>
+        <div className="flex flex-wrap gap-2 sm:ml-auto">
+          <Button
+            onClick={() => {
+              onChange({ returnEmpty: true });
+              onReload();
+            }}
+          >
+            Load empty data
+          </Button>
+          {/* Always loads the sample bookings, so it also undoes "Load empty data". */}
+          <Button
+            onClick={() => {
+              onChange({ returnEmpty: false });
+              onReload();
+            }}
+          >
+            Reload data
+          </Button>
+        </div>
       </div>
     </aside>
   );

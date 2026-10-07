@@ -14,6 +14,7 @@ import type { ApiConfig, Booking, BookingStatus } from '../types';
 const DEFAULT_CONFIG: ApiConfig = {
   delayMs: 600,
   failLoad: false,
+  returnEmpty: false,
   failUpdate: false,
   failUpdateIds: [],
 };
@@ -40,7 +41,11 @@ export async function getBookings(): Promise<Booking[]> {
   await wait(config.delayMs);
 
   if (config.failLoad) {
-    throw new Error('Couldn’t load bookings. Check your connection and try again.');
+    throw new Error('The server didn’t respond. Check your connection and try again.');
+  }
+
+  if (config.returnEmpty) {
+    return [];
   }
 
   // Hand out copies, so nothing outside can edit the "database" by accident.

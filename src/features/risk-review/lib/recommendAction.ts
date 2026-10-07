@@ -57,3 +57,15 @@ export function recommendAction(risk: RiskResult): Recommendation {
     rationale: 'Low risk: nothing here needs a second look.',
   };
 }
+
+/**
+ * Why Approve is unavailable, or null when it's allowed. Only one rule today:
+ * a booking waiting on its ID check can't be approved (CLAUDE.md). The
+ * operator can still request verification or decline.
+ */
+export function approveBlockedReason(recommendation: Recommendation): string | null {
+  if (recommendation.action === 'wait_for_id') {
+    return 'Approve is unavailable until the ID check returns.';
+  }
+  return null;
+}

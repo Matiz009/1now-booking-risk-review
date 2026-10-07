@@ -226,15 +226,15 @@ const MESSAGES: Record<
   BookingStatus,
   { success: (id: string) => string; verb: (id: string) => string }
 > = {
-  approved: { success: (id) => `Booking ${id} approved.`, verb: (id) => `approve ${id}` },
-  declined: { success: (id) => `Booking ${id} declined.`, verb: (id) => `decline ${id}` },
+  approved: { success: (id) => `${id} approved.`, verb: (id) => `approve ${id}` },
+  declined: { success: (id) => `${id} declined.`, verb: (id) => `decline ${id}` },
   verification_requested: {
     success: (id) => `Verification requested for ${id}.`,
     verb: (id) => `request verification for ${id}`,
   },
   // No transition leads back here today, but the Record must cover every status.
   needs_review: {
-    success: (id) => `Booking ${id} moved back to review.`,
+    success: (id) => `${id} moved back to review.`,
     verb: (id) => `move ${id} back to review`,
   },
 };

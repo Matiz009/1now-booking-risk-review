@@ -10,6 +10,7 @@ import { STATUS_LABELS, statusTabId } from '../lib/statusLabels';
 import type { BookingStatus } from '../types';
 import { BookingTable } from './BookingTable';
 import { DevPanel } from './DevPanel';
+import { ReviewDrawer } from './ReviewDrawer';
 import { StatusTabs } from './StatusTabs';
 
 const PANEL_ID = 'risk-review-panel';
@@ -36,13 +37,29 @@ const EMPTY_TEXT: Record<BookingStatus, { title: string; description: string }> 
 
 /**
  * Composes the feature. Booking data comes from useBookings; the state kept
- * here is UI-only: which tab is open, and which toasts are showing.
+ * here is UI-only: which tab is open, which booking is in the drawer, and
+ * which toasts are showing.
  */
 export function RiskReviewPage() {
-  const { scoredBookings, loadStatus, pendingIds, reload, apiSettings, updateApiSettings } =
-    useBookings();
+  const {
+    scoredBookings,
+    loadStatus,
+    loadError,
+    pendingIds,
+    reload,
+    updateStatus,
+    apiSettings,
+    updateApiSettings,
+  } = useBookings();
   const [activeTab, setActiveTab] = useState<BookingStatus>('needs_review');
+  // Only the id is kept, never a copy of the booking, so the drawer always
+  // shows the hook's current version (including optimistic changes).
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { toasts, showToast, dismissToast } = useToasts();
+
+  // The last booking opened. Still set after the drawer closes, which is when
+  // focus has to go back to it.
+  const lastSelectedId = useRef<string | null>(null);
 
   // Set by Retry, read once the reload lands. A ref, because flipping it
   // shouldn't re-render anything.
@@ -81,11 +98,43 @@ export function RiskReviewPage() {
     reload();
   }, [reload]);
 
-  // Placeholder until Phase 5 opens the review drawer here instead.
-  const handleSelect = useCallback(
-    (bookingId: string) => showToast('info', `Review drawer for ${bookingId} arrives in Phase 5.`),
-    [showToast],
+  const selected = scoredBookings.find(({ booking }) => booking.id === selectedId) ?? null;
+
+  const handleSelect = useCallback((bookingId: string) => {
+    lastSelectedId.current = bookingId;
+    setSelectedId(bookingId);
+  }, []);
+
+  const handleClose = useCallback(() => setSelectedId(null), []);
+
+  // Click → useBookings.updateStatus (optimistic update, API call, rollback on
+  // failure) → close the drawer → toast the hook's message.
+  const handleAction = useCallback(
+    async (bookingId: string, next: BookingStatus, declineReason: string | null) => {
+      const outcome = await updateStatus(bookingId, next, declineReason);
+      // Close only if the operator is still looking at this booking.
+      setSelectedId((current) => (current === bookingId ? null : current));
+      showToast(outcome.ok ? 'success' : 'error', outcome.message);
+    },
+    [updateStatus, showToast],
   );
+
+  // Focus goes back to the control that opens the booking. Both layouts have
+  // one and CSS hides one of them; focus() does nothing on a hidden element,
+  // so try each until one takes it. If the booking has moved to another tab,
+  // fall back to the selected tab.
+  const restoreFocus = useCallback(() => {
+    const triggers = document.querySelectorAll<HTMLElement>(
+      `[data-review-trigger="${lastSelectedId.current}"]`,
+    );
+    for (const trigger of triggers) {
+      trigger.focus();
+      if (document.activeElement === trigger) {
+        return;
+      }
+    }
+    document.getElementById(statusTabId(activeTab))?.focus();
+  }, [activeTab]);
 
   return (
     <div className="space-y-6">
@@ -101,7 +150,7 @@ export function RiskReviewPage() {
       {loadStatus === 'error' && (
         <ErrorState
           title="Couldn’t load bookings"
-          message="Check your connection and try again."
+          message={loadError ?? 'Check your connection and try again.'}
           onRetry={handleRetry}
         />
       )}
@@ -138,6 +187,13 @@ export function RiskReviewPage() {
       )}
 
       <DevPanel settings={apiSettings} onChange={updateApiSettings} onReload={reload} />
+      <ReviewDrawer
+        item={selected}
+        isPending={selected !== null && pendingIds.includes(selected.booking.id)}
+        onClose={handleClose}
+        onAction={handleAction}
+        onRestoreFocus={restoreFocus}
+      />
       <Toast toasts={toasts} onDismiss={dismissToast} />
     </div>
   );

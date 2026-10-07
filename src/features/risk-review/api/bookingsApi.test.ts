@@ -29,7 +29,12 @@ describe('getBookings', () => {
 
   it('rejects when failLoad is on', async () => {
     configureApi({ failLoad: true });
-    await expect(getBookings()).rejects.toThrow(/couldn’t load bookings/i);
+    await expect(getBookings()).rejects.toThrow(/server didn’t respond/i);
+  });
+
+  it('resolves with no bookings when returnEmpty is on', async () => {
+    configureApi({ returnEmpty: true });
+    await expect(getBookings()).resolves.toEqual([]);
   });
 });
 
@@ -77,6 +82,7 @@ describe('resetApi', () => {
     expect(getApiConfig()).toEqual({
       delayMs: 600,
       failLoad: false,
+      returnEmpty: false,
       failUpdate: false,
       failUpdateIds: [],
     });
