@@ -1,7 +1,7 @@
 import { mockBookings } from '../data/bookings.mock';
 import { DECLINE_REASON_MIN_LENGTH } from '../lib/risk.config';
 import { canTransition } from '../lib/transitions';
-import type { Booking, BookingStatus } from '../types';
+import type { ApiConfig, Booking, BookingStatus } from '../types';
 
 /**
  * A pretend backend: an in-memory list behind async functions, with a delay
@@ -10,17 +10,6 @@ import type { Booking, BookingStatus } from '../types';
  * It re-checks the same rules the UI checks (transitions, decline reason),
  * because a real server would never trust the client to have done it.
  */
-
-type ApiConfig = {
-  /** Artificial latency. 0 skips the timer entirely, so tests need no fake timers. */
-  delayMs: number;
-  /** Every getBookings call rejects. */
-  failLoad: boolean;
-  /** Every updateBookingStatus call rejects. */
-  failUpdate: boolean;
-  /** Only updates to these booking ids reject. For testing one failure among several. */
-  failUpdateIds: string[];
-};
 
 const DEFAULT_CONFIG: ApiConfig = {
   delayMs: 600,

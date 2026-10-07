@@ -1,7 +1,6 @@
-/**
- * Page shell. Layout only — the feature itself is rendered from
- * features/risk-review and arrives in Phase 4.
- */
+import { RiskReviewPage } from '@/features/risk-review/components/RiskReviewPage';
+
+/** Page shell. Layout only; the feature lives in features/risk-review. */
 export function App() {
   return (
     <div className="min-h-screen">
@@ -15,7 +14,7 @@ export function App() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <p className="text-sm text-slate-500">Scaffold is up. The review queue lands in Phase 4.</p>
+        <RiskReviewPage />
       </main>
     </div>
   );

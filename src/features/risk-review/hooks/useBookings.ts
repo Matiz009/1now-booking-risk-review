@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { getBookings, updateBookingStatus } from '../api/bookingsApi';
+import { configureApi, getApiConfig, getBookings, updateBookingStatus } from '../api/bookingsApi';
 import { recommendAction } from '../lib/recommendAction';
 import { DECLINE_REASON_MIN_LENGTH } from '../lib/risk.config';
 import { scoreBooking } from '../lib/scoreBooking';
 import { canTransition } from '../lib/transitions';
-import type { Booking, BookingStatus, LoadStatus, ScoredBooking, UpdateOutcome } from '../types';
+import type {
+  ApiConfig,
+  Booking,
+  BookingStatus,
+  LoadStatus,
+  ScoredBooking,
+  UpdateOutcome,
+} from '../types';
 
 /**
  * The only place that talks to the API (CLAUDE.md rule 3). Loads bookings,
@@ -131,6 +138,16 @@ export function useBookings() {
     };
   }, [loadRequest]);
 
+  // Demo-only: DevPanel changes the mock API's switches through here, so no
+  // component imports the API module (CLAUDE.md rule 3). `useState(fn)` calls
+  // `fn` once, on the first render only.
+  const [apiSettings, setApiSettings] = useState<ApiConfig>(getApiConfig);
+
+  const updateApiSettings = useCallback((next: Partial<ApiConfig>) => {
+    configureApi(next);
+    setApiSettings(getApiConfig());
+  }, []);
+
   const reload = useCallback(() => {
     dispatch({ type: 'load_started' });
     setLoadRequest((n) => n + 1);
@@ -199,6 +216,8 @@ export function useBookings() {
     pendingIds: state.pendingIds,
     reload,
     updateStatus,
+    apiSettings,
+    updateApiSettings,
   };
 }
 

@@ -139,3 +139,15 @@ export type UpdateOutcome = {
   /** Ready to show, e.g. "Booking BK-1042 declined." or "Couldn't decline BK-1042. Change reverted." */
   message: string;
 };
+
+/** The mock API's switches. Changed only through useBookings, which DevPanel calls. */
+export type ApiConfig = {
+  /** Artificial latency. 0 skips the timer entirely, so tests need no fake timers. */
+  delayMs: number;
+  /** Every getBookings call rejects. */
+  failLoad: boolean;
+  /** Every updateBookingStatus call rejects. */
+  failUpdate: boolean;
+  /** Only updates to these booking ids reject. For testing one failure among several. */
+  failUpdateIds: string[];
+};
