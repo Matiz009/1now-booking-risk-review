@@ -208,6 +208,8 @@ One test run failed with 11 errors and passed on re-run without the errors being
 
 ## Phase 6 — README
 
+README written last, leading with the operator's problem; assumptions and cuts stated explicitly.
+
 ---
 
 ## Where I got stuck
