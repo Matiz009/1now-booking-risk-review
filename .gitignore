@@ -27,7 +27,3 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
-
-# My working log of where Claude Code went wrong. Un-ignore this line on Friday
-# when the "Where I corrected Claude Code" section is written up.
-NOTES.md
