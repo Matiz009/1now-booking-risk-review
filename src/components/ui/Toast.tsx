@@ -30,15 +30,19 @@ type ToastProps = {
 /**
  * The toast region. It is always rendered, even when empty, because screen
  * readers only announce changes inside a live region that already existed.
+ *
+ * z-50 puts it above the review drawer's overlay (z-40), and each toast has
+ * pointer-events-auto because Radix sets pointer-events: none on <body> while
+ * the drawer is open. Screen readers still reach it then: the aria-hidden
+ * package Radix uses never hides an element with aria-live. On phones it sits
+ * at the top, clear of the demo controls in the bottom-left corner.
  */
 export function Toast({ toasts, onDismiss }: ToastProps) {
   return (
     <div
       role="status"
       aria-live="polite"
-      // Lets the review drawer tell a click on a toast from a click outside it.
-      data-toast-region
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 p-4 sm:items-end"
+      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex flex-col items-center gap-2 p-4 sm:top-auto sm:bottom-0 sm:items-end"
     >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />

@@ -8,87 +8,101 @@ type DevPanelProps = {
   settings: ApiConfig;
   onChange: (next: Partial<ApiConfig>) => void;
   onReload: () => void;
+  onReset: () => void;
 };
 
 /**
  * Demo-only switches for the mock API, so failures and slow networks can be
- * shown on purpose. It's styled as a dashed, striped box so nobody mistakes
- * it for part of the product. `useId` gives each input a unique id for its <label>.
+ * shown on purpose. Dashed and striped so nobody mistakes it for the product.
+ * `useId` gives each input a unique id for its <label>.
+ *
+ * It floats in the bottom-left corner above the review drawer's overlay
+ * (z-50 vs z-40), so the demo can fail an update, untick the switch and retry
+ * without closing the drawer. Three things make that work while the drawer is open:
+ * - `pointer-events-auto`: Radix sets `pointer-events: none` on <body>.
+ * - The drawer ignores outside clicks (ReviewDrawer's onInteractOutside).
+ * - `aria-live="off"`: Radix hides everything outside the dialog from screen
+ *   readers using the aria-hidden package, which skips elements that have an
+ *   aria-live attribute. "off" is the default politeness, so nothing is announced.
+ * A native <details> lets it collapse out of the way, with no state to manage.
  */
-export function DevPanel({ settings, onChange, onReload }: DevPanelProps) {
+export function DevPanel({ settings, onChange, onReload, onReset }: DevPanelProps) {
   const id = useId();
 
   return (
     <aside
       aria-labelledby={`${id}-heading`}
-      className="rounded-lg border-2 border-dashed border-amber-400 bg-[repeating-linear-gradient(135deg,var(--color-amber-50)_0_12px,var(--color-white)_12px_24px)] p-4"
+      aria-live="off"
+      className="pointer-events-auto fixed bottom-4 left-4 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-lg border-2 border-dashed border-amber-400 bg-[repeating-linear-gradient(135deg,var(--color-amber-50)_0_12px,var(--color-white)_12px_24px)] shadow-lg"
     >
-      <h2 id={`${id}-heading`} className="text-sm font-semibold text-amber-900">
-        Demo controls
-      </h2>
-      <p className="mt-0.5 text-xs text-amber-900/80">
-        Not part of the product. These switches simulate the API for the demo.
-      </p>
+      <details open>
+        <summary className="cursor-pointer rounded-md px-3 py-2">
+          <h2 id={`${id}-heading`} className="inline text-sm font-semibold text-amber-900">
+            Demo controls
+          </h2>
+        </summary>
 
-      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6">
-        <label className="flex items-center gap-2 text-sm text-slate-800">
-          <input
-            type="checkbox"
-            checked={settings.failLoad}
-            onChange={(event) => onChange({ failLoad: event.target.checked })}
-            className="size-4 accent-amber-600"
-          />
-          Fail loading bookings
-        </label>
+        <div className="space-y-3 px-3 pb-3">
+          <p className="text-xs text-amber-900/80">
+            Not part of the product. These switches simulate the API for the demo.
+          </p>
 
-        <label className="flex items-center gap-2 text-sm text-slate-800">
-          <input
-            type="checkbox"
-            checked={settings.failUpdate}
-            onChange={(event) => onChange({ failUpdate: event.target.checked })}
-            className="size-4 accent-amber-600"
-          />
-          Fail status updates
-        </label>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                checked={settings.failLoad}
+                onChange={(event) => onChange({ failLoad: event.target.checked })}
+                className="size-4 accent-amber-600"
+              />
+              Fail loading bookings
+            </label>
 
-        <div className="flex items-center gap-2">
-          <label htmlFor={`${id}-delay`} className="text-sm text-slate-800">
-            API delay
-          </label>
-          <select
-            id={`${id}-delay`}
-            value={settings.delayMs}
-            onChange={(event) => onChange({ delayMs: Number(event.target.value) })}
-            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
-          >
-            {DELAY_OPTIONS.map((ms) => (
-              <option key={ms} value={ms}>
-                {ms} ms
-              </option>
-            ))}
-          </select>
+            <label className="flex items-center gap-2 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                checked={settings.failUpdate}
+                onChange={(event) => onChange({ failUpdate: event.target.checked })}
+                className="size-4 accent-amber-600"
+              />
+              Fail status updates
+            </label>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor={`${id}-delay`} className="text-sm text-slate-800">
+                API delay
+              </label>
+              <select
+                id={`${id}-delay`}
+                value={settings.delayMs}
+                onChange={(event) => onChange({ delayMs: Number(event.target.value) })}
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+              >
+                {DELAY_OPTIONS.map((ms) => (
+                  <option key={ms} value={ms}>
+                    {ms} ms
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {/* Refetches whatever the mock server holds now, changes included. */}
+            <Button onClick={onReload}>Reload data</Button>
+            <Button
+              onClick={() => {
+                onChange({ returnEmpty: true });
+                onReload();
+              }}
+            >
+              Load empty data
+            </Button>
+            {/* Back to the original 12 bookings and default switches. */}
+            <Button onClick={onReset}>Reset demo data</Button>
+          </div>
         </div>
-
-        <div className="flex flex-wrap gap-2 sm:ml-auto">
-          <Button
-            onClick={() => {
-              onChange({ returnEmpty: true });
-              onReload();
-            }}
-          >
-            Load empty data
-          </Button>
-          {/* Always loads the sample bookings, so it also undoes "Load empty data". */}
-          <Button
-            onClick={() => {
-              onChange({ returnEmpty: false });
-              onReload();
-            }}
-          >
-            Reload data
-          </Button>
-        </div>
-      </div>
+      </details>
     </aside>
   );
 }

@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { configureApi, getApiConfig, getBookings, updateBookingStatus } from '../api/bookingsApi';
+import {
+  configureApi,
+  getApiConfig,
+  getBookings,
+  resetApi,
+  updateBookingStatus,
+} from '../api/bookingsApi';
 import { recommendAction } from '../lib/recommendAction';
 import { DECLINE_REASON_MIN_LENGTH } from '../lib/risk.config';
 import { scoreBooking } from '../lib/scoreBooking';
-import { canTransition } from '../lib/transitions';
+import { canTransition, nextStatuses } from '../lib/transitions';
 import type {
   ApiConfig,
   Booking,
@@ -43,6 +49,7 @@ type BookingsAction =
       id: string;
       nextStatus: BookingStatus;
       declineReason: string | null;
+      decidedAt: string | null;
     }
   | { type: 'update_succeeded'; booking: Booking }
   | { type: 'update_failed'; id: string };
@@ -77,6 +84,7 @@ function bookingsReducer(state: BookingsState, action: BookingsAction): Bookings
         ...current,
         status: action.nextStatus,
         declineReason: action.declineReason,
+        decidedAt: action.decidedAt,
       };
       return {
         ...state,
@@ -153,6 +161,13 @@ export function useBookings() {
     setLoadRequest((n) => n + 1);
   }, []);
 
+  /** Demo-only: the original 12 bookings and default switches, then a fresh load. */
+  const resetDemo = useCallback(() => {
+    resetApi();
+    setApiSettings(getApiConfig());
+    reload();
+  }, [reload]);
+
   const updateStatus = useCallback(
     async (
       id: string,
@@ -179,7 +194,10 @@ export function useBookings() {
       }
 
       // 1. Update state immediately. The row moves tabs before the API answers.
-      dispatch({ type: 'update_started', id, nextStatus, declineReason: reason });
+      // The optimistic decision time. The reducer stays pure, so the clock is
+      // read here; the server's own time replaces it on success.
+      const decidedAt = nextStatuses(nextStatus).length === 0 ? new Date().toISOString() : null;
+      dispatch({ type: 'update_started', id, nextStatus, declineReason: reason, decidedAt });
 
       try {
         // 2. Ask the server.
@@ -218,6 +236,7 @@ export function useBookings() {
     updateStatus,
     apiSettings,
     updateApiSettings,
+    resetDemo,
   };
 }
 

@@ -36,7 +36,9 @@ export type RiskSignalId =
   | 'high_value_car'
   | 'long_trip';
 
-export type RecommendedAction = 'approve' | 'request_verification' | 'decline' | 'wait_for_id';
+/** `wait_for_renter`: verification was requested, so the next move is the renter's. */
+export type RecommendedAction =
+  'approve' | 'request_verification' | 'decline' | 'wait_for_id' | 'wait_for_renter';
 
 // ---------------------------------------------------------------------------
 // Stored data
@@ -76,6 +78,8 @@ export type Booking = {
   status: BookingStatus;
   /** Required when status is `declined`, null otherwise. */
   declineReason: string | null;
+  /** ISO 8601. When the booking was approved or declined; null until it's final. */
+  decidedAt: string | null;
   idCheck: IdCheckStatus;
   paymentType: PaymentType;
   renter: Renter;

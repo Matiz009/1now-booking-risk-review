@@ -1,4 +1,4 @@
-import type { Recommendation, RiskResult } from '../types';
+import type { BookingStatus, Recommendation, RiskResult } from '../types';
 import { RECOMMENDATION_THRESHOLDS } from './risk.config';
 
 /**
@@ -51,11 +51,45 @@ export function recommendAction(risk: RiskResult): Recommendation {
     return { action: 'request_verification', headline: 'Request verification', rationale };
   }
 
-  return {
-    action: 'approve',
-    headline: 'Approve',
-    rationale: 'Low risk: nothing here needs a second look.',
-  };
+  // Low risk can still have a signal or two; say so rather than contradict
+  // the list the operator is looking at.
+  const count = risk.signals.length;
+  const rationale =
+    count === 0
+      ? 'Low risk: nothing here needs a second look.'
+      : `Low risk. ${count === 1 ? 'One signal' : `${count} signals`} to glance at; fine to approve.`;
+
+  return { action: 'approve', headline: 'Approve', rationale };
+}
+
+/**
+ * Fits the risk-based recommendation to where the booking is now. Pure.
+ *
+ *   needs_review           → the recommendation as is
+ *   verification_requested → wait for the renter (but an ID check still
+ *                            pending keeps its own advice, and Approve stays blocked)
+ *   approved / declined    → null: the decision is made, there's nothing to suggest
+ */
+export function recommendationForStatus(
+  status: BookingStatus,
+  recommendation: Recommendation,
+): Recommendation | null {
+  switch (status) {
+    case 'needs_review':
+      return recommendation;
+    case 'verification_requested':
+      if (recommendation.action === 'wait_for_id') {
+        return recommendation;
+      }
+      return {
+        action: 'wait_for_renter',
+        headline: 'Waiting on the renter',
+        rationale: 'Approve once they’re verified, or decline.',
+      };
+    case 'approved':
+    case 'declined':
+      return null;
+  }
 }
 
 /**

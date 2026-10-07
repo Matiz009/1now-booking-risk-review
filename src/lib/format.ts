@@ -22,6 +22,15 @@ const monthDayYear = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 });
 
+/** "Oct 7, 2026, 11:42 AM" */
+const dateTime = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
 const relative = new Intl.RelativeTimeFormat('en-US', { numeric: 'always' });
 
 const SECONDS_PER_MINUTE = 60;
@@ -36,6 +45,11 @@ export function formatCurrency(amount: number): string {
 /** `Oct 9, 2026` */
 export function formatDate(date: Date): string {
   return monthDayYear.format(date);
+}
+
+/** `Oct 7, 2026, 11:42 AM`, in the viewer's time zone. */
+export function formatDateTime(date: Date): string {
+  return dateTime.format(date);
 }
 
 /**

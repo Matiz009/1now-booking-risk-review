@@ -50,13 +50,19 @@ export function RiskReviewPage() {
     updateStatus,
     apiSettings,
     updateApiSettings,
+    resetDemo,
   } = useBookings();
   const [activeTab, setActiveTab] = useState<BookingStatus>('needs_review');
   // Only the id is kept, never a copy of the booking, so the drawer always
   // shows the hook's current version (including optimistic changes).
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Why the last update from the drawer failed, shown inside the drawer.
+  const [drawerError, setDrawerError] = useState<string | null>(null);
   const { toasts, showToast, dismissToast } = useToasts();
 
+  // The booking open in the drawer right now, as a ref, so handleAction can
+  // read it after its `await` (state captured before the await would be stale).
+  const openId = useRef<string | null>(null);
   // The last booking opened. Still set after the drawer closes, which is when
   // focus has to go back to it.
   const lastSelectedId = useRef<string | null>(null);
@@ -101,26 +107,47 @@ export function RiskReviewPage() {
   const selected = scoredBookings.find(({ booking }) => booking.id === selectedId) ?? null;
 
   const handleSelect = useCallback((bookingId: string) => {
+    openId.current = bookingId;
     lastSelectedId.current = bookingId;
     setSelectedId(bookingId);
+    setDrawerError(null);
   }, []);
 
-  const handleClose = useCallback(() => setSelectedId(null), []);
+  const handleClose = useCallback(() => {
+    openId.current = null;
+    setSelectedId(null);
+    setDrawerError(null);
+  }, []);
 
   // Click → useBookings.updateStatus (optimistic update, API call, rollback on
-  // failure) → close the drawer on success → toast the hook's message.
+  // failure) → then, depending on the outcome and on whether the drawer is
+  // still showing this booking:
+  //   success               → close the drawer, success toast
+  //   failure, drawer open  → inline error in the drawer only; its role="alert"
+  //                           already announces it, so a toast would say it twice
+  //   failure, drawer gone  → error toast
   const handleAction = useCallback(
     async (bookingId: string, next: BookingStatus, declineReason: string | null) => {
+      setDrawerError(null);
       const outcome = await updateStatus(bookingId, next, declineReason);
-      // On success, close (if the operator is still looking at this booking).
-      // On failure, keep it open: the drawer shows the error and allows a retry.
+      const isOpenOnThis = openId.current === bookingId;
+
       if (outcome.ok) {
-        setSelectedId((current) => (current === bookingId ? null : current));
+        if (isOpenOnThis) {
+          handleClose();
+        }
+        showToast('success', outcome.message);
+      } else if (isOpenOnThis) {
+        setDrawerError(
+          next === 'declined'
+            ? `Couldn’t decline ${bookingId}. Your reason is kept; try again.`
+            : `${outcome.message} Try again.`,
+        );
+      } else {
+        showToast('error', outcome.message);
       }
-      showToast(outcome.ok ? 'success' : 'error', outcome.message);
-      return outcome;
     },
-    [updateStatus, showToast],
+    [updateStatus, showToast, handleClose],
   );
 
   // Focus goes back to the control that opens the booking. Both layouts have
@@ -141,7 +168,8 @@ export function RiskReviewPage() {
   }, [activeTab]);
 
   return (
-    <div className="space-y-6">
+    // Bottom padding so the floating demo controls don't hide the end of the list.
+    <div className="space-y-6 pb-72 md:pb-56">
       {loadStatus === 'loading' && (
         <div role="status" aria-label="Loading bookings" className="space-y-3">
           <Skeleton className="h-11 w-full rounded-lg" />
@@ -190,10 +218,16 @@ export function RiskReviewPage() {
         </section>
       )}
 
-      <DevPanel settings={apiSettings} onChange={updateApiSettings} onReload={reload} />
+      <DevPanel
+        settings={apiSettings}
+        onChange={updateApiSettings}
+        onReload={reload}
+        onReset={resetDemo}
+      />
       <ReviewDrawer
         item={selected}
         isPending={selected !== null && pendingIds.includes(selected.booking.id)}
+        error={drawerError}
         onClose={handleClose}
         onAction={handleAction}
         onRestoreFocus={restoreFocus}

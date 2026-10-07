@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RiskResult, RiskSignal } from '../types';
-import { approveBlockedReason, recommendAction } from './recommendAction';
+import { approveBlockedReason, recommendAction, recommendationForStatus } from './recommendAction';
 import { riskLevelFor } from './scoreBooking';
 
 /**
@@ -85,5 +85,67 @@ describe('approveBlockedReason', () => {
     expect(approveBlockedReason(recommendAction(riskWithScore(0)))).toBeNull();
     expect(approveBlockedReason(recommendAction(riskWithScore(45)))).toBeNull();
     expect(approveBlockedReason(recommendAction(riskWithScore(100, [idFailed])))).toBeNull();
+  });
+});
+
+describe('low-risk wording', () => {
+  const firstTime: RiskSignal = {
+    id: 'first_time_renter',
+    label: 'First-time renter',
+    points: 10,
+    detail: 'No completed trips',
+  };
+  const longTrip: RiskSignal = {
+    id: 'long_trip',
+    label: 'Trip longer than 14 days',
+    points: 5,
+    detail: '20-day trip',
+  };
+
+  it('says nothing needs a second look only when no signal fired', () => {
+    expect(recommendAction(riskWithScore(0)).rationale).toBe(
+      'Low risk: nothing here needs a second look.',
+    );
+  });
+
+  it('mentions one fired signal instead of contradicting it', () => {
+    const rationale = recommendAction(riskWithScore(10, [firstTime])).rationale;
+
+    expect(rationale).toBe('Low risk. One signal to glance at; fine to approve.');
+  });
+
+  it('counts several fired signals', () => {
+    const rationale = recommendAction(riskWithScore(15, [firstTime, longTrip])).rationale;
+
+    expect(rationale).toBe('Low risk. 2 signals to glance at; fine to approve.');
+  });
+});
+
+describe('recommendationForStatus', () => {
+  const verify = recommendAction(riskWithScore(45));
+  const waitForId = recommendAction({ score: 0, level: 'unscored', signals: [] });
+
+  it('passes the recommendation through while the booking needs review', () => {
+    expect(recommendationForStatus('needs_review', verify)).toBe(verify);
+  });
+
+  it('waits on the renter once verification has been requested', () => {
+    expect(recommendationForStatus('verification_requested', verify)).toEqual({
+      action: 'wait_for_renter',
+      headline: 'Waiting on the renter',
+      rationale: 'Approve once they’re verified, or decline.',
+    });
+  });
+
+  it('keeps waiting for a pending ID check after verification is requested', () => {
+    const fitted = recommendationForStatus('verification_requested', waitForId);
+
+    expect(fitted).toBe(waitForId);
+    expect(approveBlockedReason(fitted!)).not.toBeNull();
+  });
+
+  it('suggests nothing for a final booking', () => {
+    expect(recommendationForStatus('approved', verify)).toBeNull();
+    expect(recommendationForStatus('declined', verify)).toBeNull();
   });
 });

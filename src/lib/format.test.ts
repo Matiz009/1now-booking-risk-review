@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatCurrency, formatDate, formatDateRange, formatRelative } from '@/lib/format';
+import {
+  formatCurrency,
+  formatDate,
+  formatDateRange,
+  formatDateTime,
+  formatRelative,
+} from '@/lib/format';
 import { addDays, addHours, addMinutes } from '@/lib/datetime';
 
 /**
@@ -47,6 +53,13 @@ describe('formatDateRange', () => {
     expect(formatDateRange(new Date(2026, 9, 28), new Date(2026, 10, 4))).toBe(
       'Oct 28 – Nov 4, 2026',
     );
+  });
+});
+
+describe('formatDateTime', () => {
+  it('renders the date and a 12-hour time', () => {
+    // \s: newer ICU puts a narrow no-break space before AM/PM.
+    expect(formatDateTime(new Date(2026, 9, 7, 11, 42))).toMatch(/^Oct 7, 2026, 11:42\sAM$/);
   });
 });
 

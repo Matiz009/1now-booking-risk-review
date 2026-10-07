@@ -1,12 +1,13 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useId, useState } from 'react';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDateTime } from '@/lib/format';
 import { bookingFacts } from '../lib/bookingFacts';
 import { carName, tripDates } from '../lib/bookingText';
+import { recommendationForStatus } from '../lib/recommendAction';
 import { MAX_SCORE } from '../lib/risk.config';
 import { STATUS_LABELS } from '../lib/statusLabels';
 import { nextStatuses } from '../lib/transitions';
-import type { BookingStatus, ScoredBooking, UpdateOutcome } from '../types';
+import type { BookingStatus, ScoredBooking } from '../types';
 import { ActionBar } from './ActionBar';
 import { DeclineReasonForm } from './DeclineReasonForm';
 import { RecommendationCard } from './RecommendationCard';
@@ -18,13 +19,10 @@ type ReviewDrawerProps = {
   /** The booking under review, or null when the drawer is closed. */
   item: ScoredBooking | null;
   isPending: boolean;
+  /** Why the last update from this drawer failed, shown inline. Null when it didn't. */
+  error: string | null;
   onClose: () => void;
-  /** Resolves when the API answers. On failure the drawer stays open to retry. */
-  onAction: (
-    bookingId: string,
-    next: BookingStatus,
-    declineReason: string | null,
-  ) => Promise<UpdateOutcome>;
+  onAction: (bookingId: string, next: BookingStatus, declineReason: string | null) => void;
   /** Called once the drawer has closed, to put focus back where it belongs. */
   onRestoreFocus: () => void;
 };
@@ -37,6 +35,7 @@ type ReviewDrawerProps = {
 export function ReviewDrawer({
   item,
   isPending,
+  error,
   onClose,
   onAction,
   onRestoreFocus,
@@ -53,19 +52,19 @@ export function ReviewDrawer({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-900/40" />
         <Dialog.Content
+          // Radix hides the rest of the page from screen readers but doesn't
+          // set this, so say it explicitly: everything else is out of reach.
+          aria-modal="true"
           // By default Radix refocuses whatever had focus before opening. After a
           // row click that's nothing useful, so the page picks the target itself.
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             onRestoreFocus();
           }}
-          // Toasts sit above the overlay. Dismissing one counts as a click
-          // outside the drawer, which would close it and lose a typed reason.
-          onInteractOutside={(event) => {
-            if (event.target instanceof Element && event.target.closest('[data-toast-region]')) {
-              event.preventDefault();
-            }
-          }}
+          // Only × and Esc close the drawer. A stray click outside (on the
+          // overlay, a toast or the demo controls) must never throw away a
+          // half-typed decline reason.
+          onInteractOutside={(event) => event.preventDefault()}
           className="fixed inset-0 z-40 flex flex-col bg-white shadow-xl md:inset-y-0 md:right-0 md:left-auto md:w-[30rem] md:border-l md:border-slate-200"
         >
           {/* `key` remounts the body per booking, so its local state starts fresh. */}
@@ -74,6 +73,7 @@ export function ReviewDrawer({
               key={item.booking.id}
               item={item}
               isPending={isPending}
+              error={error}
               onAction={onAction}
             />
           )}
@@ -86,36 +86,29 @@ export function ReviewDrawer({
 type DrawerBodyProps = {
   item: ScoredBooking;
   isPending: boolean;
+  error: string | null;
   onAction: ReviewDrawerProps['onAction'];
 };
 
-function DrawerBody({ item, isPending, onAction }: DrawerBodyProps) {
-  const { booking, risk, recommendation } = item;
+/** The change this drawer started: where the booking was, and where it's going. */
+type Acted = { from: BookingStatus; to: BookingStatus };
+
+function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
+  const { booking, risk } = item;
   const id = useId();
   const [isDeclining, setIsDeclining] = useState(false);
   // The update is optimistic: while it's in flight, `booking.status` already
   // shows the new status. The buttons keep showing the choices the operator
   // acted on, disabled, instead of vanishing mid-save.
-  const [actedFrom, setActedFrom] = useState<BookingStatus | null>(null);
-  const actionStatus = isPending && actedFrom ? actedFrom : booking.status;
+  const [acted, setActed] = useState<Acted | null>(null);
+  const actionStatus = isPending && acted ? acted.from : booking.status;
   const isFinal = nextStatuses(actionStatus).length === 0;
-  // Set when an update fails. The hook has already rolled the booking back,
-  // so the actions are live again; this says what happened, inside the drawer.
-  const [error, setError] = useState<string | null>(null);
+  const recommendation = recommendationForStatus(actionStatus, item.recommendation);
+  const signalTotal = risk.signals.reduce((sum, signal) => sum + signal.points, 0);
 
-  async function submit(next: BookingStatus, declineReason: string | null) {
-    setActedFrom(booking.status);
-    setError(null);
-    const outcome = await onAction(booking.id, next, declineReason);
-    // On success the page closes the drawer, so only failure needs handling.
-    // The decline form stays mounted, so the typed reason is still there.
-    if (!outcome.ok) {
-      setError(
-        next === 'declined'
-          ? `Couldn’t decline ${booking.id}. Your reason is kept; try again.`
-          : `${outcome.message} Try again.`,
-      );
-    }
+  function submit(next: BookingStatus, declineReason: string | null) {
+    setActed({ from: booking.status, to: next });
+    onAction(booking.id, next, declineReason);
   }
 
   function handleAction(next: BookingStatus) {
@@ -184,20 +177,35 @@ function DrawerBody({ item, isPending, onAction }: DrawerBodyProps) {
                   </span>
                 </span>
               </div>
+              {/* Otherwise the points listed below wouldn't add up to the score. */}
+              {signalTotal > MAX_SCORE && (
+                <p className="text-sm text-slate-600">
+                  Signals total {signalTotal} · score capped at {MAX_SCORE}
+                </p>
+              )}
               <SignalList signals={risk.signals} />
             </>
           )}
         </section>
 
-        <RecommendationCard recommendation={recommendation} />
+        {recommendation && <RecommendationCard recommendation={recommendation} />}
 
         {isFinal && (
           <section aria-labelledby={`${id}-decision`} className="space-y-1">
             <h3 id={`${id}-decision`} className="text-sm font-semibold text-slate-900">
-              Decision
+              Decided
             </h3>
             <p className="text-sm text-slate-700">
-              {STATUS_LABELS[booking.status]}. This decision is final.
+              {STATUS_LABELS[booking.status]}
+              {booking.decidedAt && (
+                <>
+                  {' '}
+                  <time dateTime={booking.decidedAt}>
+                    {formatDateTime(new Date(booking.decidedAt))}
+                  </time>
+                </>
+              )}
+              . This decision is final.
             </p>
             {booking.declineReason && (
               <p className="text-sm text-slate-700">
@@ -210,7 +218,8 @@ function DrawerBody({ item, isPending, onAction }: DrawerBodyProps) {
       </div>
 
       {!isFinal && (
-        <footer className="space-y-3 border-t border-slate-200 p-4">
+        // pb-20 below md keeps the actions clear of the collapsed demo controls.
+        <footer className="space-y-3 border-t border-slate-200 p-4 pb-20 md:pb-4">
           {error && (
             <p
               role="alert"
@@ -230,6 +239,7 @@ function DrawerBody({ item, isPending, onAction }: DrawerBodyProps) {
               status={actionStatus}
               recommendation={recommendation}
               isPending={isPending}
+              pendingStatus={acted?.to ?? null}
               onAction={handleAction}
             />
           )}

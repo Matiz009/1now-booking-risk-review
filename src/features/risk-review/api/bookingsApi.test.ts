@@ -43,6 +43,7 @@ describe('updateBookingStatus', () => {
     const updated = await updateBookingStatus('BK-1001', 'approved', null);
 
     expect(updated.status).toBe('approved');
+    expect(updated.decidedAt).not.toBeNull();
     const stored = (await getBookings()).find((b) => b.id === 'BK-1001');
     expect(stored?.status).toBe('approved');
   });

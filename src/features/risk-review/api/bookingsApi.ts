@@ -1,6 +1,6 @@
 import { mockBookings } from '../data/bookings.mock';
 import { DECLINE_REASON_MIN_LENGTH } from '../lib/risk.config';
-import { canTransition } from '../lib/transitions';
+import { canTransition, nextStatuses } from '../lib/transitions';
 import type { ApiConfig, Booking, BookingStatus } from '../types';
 
 /**
@@ -82,6 +82,9 @@ export async function updateBookingStatus(
     ...current,
     status: nextStatus,
     declineReason: nextStatus === 'declined' ? reason : null,
+    // A final status records when it was decided. The server's clock is the
+    // one that counts, which is why this is set here and not by the client.
+    decidedAt: nextStatuses(nextStatus).length === 0 ? new Date().toISOString() : null,
   };
   store = store.map((booking) => (booking.id === id ? updated : booking));
 

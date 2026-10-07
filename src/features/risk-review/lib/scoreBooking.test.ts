@@ -55,6 +55,7 @@ function makeBooking(options: BookingOptions = {}): Booking {
     totalAmount: 240,
     status: 'needs_review',
     declineReason: null,
+    decidedAt: null,
     idCheck,
     paymentType,
     renter: {

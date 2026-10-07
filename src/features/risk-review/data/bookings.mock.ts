@@ -59,6 +59,8 @@ type BookingSeed = {
   tripDays: number;
   status: BookingStatus;
   declineReason?: string;
+  /** How long ago a final (approved/declined) booking was decided. */
+  decidedMinutesAgo?: number;
 };
 
 function buildBooking(seed: BookingSeed): Booking {
@@ -74,6 +76,10 @@ function buildBooking(seed: BookingSeed): Booking {
     totalAmount: seed.car.dailyRate * seed.tripDays,
     status: seed.status,
     declineReason: seed.declineReason ?? null,
+    decidedAt:
+      seed.decidedMinutesAgo === undefined
+        ? null
+        : addMinutes(now, -seed.decidedMinutesAgo).toISOString(),
     idCheck: seed.idCheck,
     paymentType: seed.paymentType,
     renter: {
@@ -292,6 +298,7 @@ const seeds: BookingSeed[] = [
     leadMinutes: 10080, // 7 days
     tripDays: 4,
     status: 'approved',
+    decidedMinutesAgo: 2700,
   },
 
   // 12 — mismatch 25 + prepaid 15 + new account 15 + first-time 10 + short lead
@@ -310,6 +317,7 @@ const seeds: BookingSeed[] = [
     leadMinutes: 60, // 1 hour
     tripDays: 4,
     status: 'declined',
+    decidedMinutesAgo: 20,
     declineReason:
       'Name on ID does not match the account holder and the card is prepaid. Asked for a bank card and a selfie; no response.',
   },

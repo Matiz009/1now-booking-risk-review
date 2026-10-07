@@ -48,6 +48,13 @@ describe('mockBookings', () => {
     }
   });
 
+  it('stores a decision time on exactly the final bookings', () => {
+    for (const booking of mockBookings) {
+      const isFinal = booking.status === 'approved' || booking.status === 'declined';
+      expect(booking.decidedAt !== null, `${booking.id}: decidedAt`).toBe(isFinal);
+    }
+  });
+
   it('leaves nameOnId null exactly while the ID check is pending', () => {
     for (const booking of mockBookings) {
       const expectation = booking.idCheck === 'pending' ? 'to be null' : 'to be set';

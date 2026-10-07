@@ -18,7 +18,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
       className="rounded-md border border-indigo-200 bg-indigo-50 p-3"
     >
       <p id={`${id}-label`} className="text-xs font-medium text-indigo-800">
-        Carisma-style suggestion · rule-based
+        Suggested action · rule-based
       </p>
       <p className="mt-1 text-base font-semibold text-slate-900">{recommendation.headline}</p>
       <p className="mt-0.5 text-sm text-slate-700">{recommendation.rationale}</p>

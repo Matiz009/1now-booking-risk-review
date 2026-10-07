@@ -24,6 +24,14 @@ export const ACTION_LABELS: Record<BookingStatus, string> = {
   declined: 'Decline',
 };
 
+/** What a button says while its change is saving. */
+export const PENDING_ACTION_LABELS: Record<BookingStatus, string> = {
+  needs_review: 'Moving…',
+  verification_requested: 'Requesting…',
+  approved: 'Approving…',
+  declined: 'Declining…',
+};
+
 /** The DOM id of a status tab, so the tab panel can point back at it with aria-labelledby. */
 export function statusTabId(status: BookingStatus): string {
   return `status-tab-${status}`;

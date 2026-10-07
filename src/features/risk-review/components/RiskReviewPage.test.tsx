@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { configureApi, resetApi } from '../api/bookingsApi';
+import { configureApi, resetApi, updateBookingStatus } from '../api/bookingsApi';
 import { mockBookings } from '../data/bookings.mock';
 import { RiskReviewPage } from './RiskReviewPage';
 
@@ -189,7 +189,7 @@ describe('RiskReviewPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Couldn’t load bookings');
   });
 
-  it('lets the demo controls load an empty queue, and reload the sample data', async () => {
+  it('lets the demo controls load an empty queue, and reset to the sample data', async () => {
     const user = userEvent.setup();
     await renderLoaded();
     const demo = screen.getByRole('complementary', { name: 'Demo controls' });
@@ -199,8 +199,35 @@ describe('RiskReviewPage', () => {
     expect(await screen.findByRole('heading', { name: 'Nothing to review' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Needs review 0' })).toBeInTheDocument();
 
-    await user.click(within(demo).getByRole('button', { name: 'Reload data' }));
+    await user.click(within(demo).getByRole('button', { name: 'Reset demo data' }));
 
     expect(await screen.findByRole('tab', { name: 'Needs review 9' })).toBeInTheDocument();
+  });
+
+  it('reloads the current data, and resets to the original 12 bookings and switches', async () => {
+    // A change already saved on the mock server before the page loads.
+    await updateBookingStatus('BK-1001', 'approved', null);
+    const user = userEvent.setup();
+    await renderLoaded();
+    const demo = screen.getByRole('complementary', { name: 'Demo controls' });
+    expect(screen.getByRole('tab', { name: 'Approved 2' })).toBeInTheDocument();
+
+    // Reload data is only a refetch: the saved change is still there.
+    await user.click(within(demo).getByRole('button', { name: 'Reload data' }));
+    expect(await screen.findByRole('tab', { name: 'Approved 2' })).toBeInTheDocument();
+
+    const failUpdates = within(demo).getByRole('checkbox', { name: 'Fail status updates' });
+    await user.click(failUpdates);
+    await user.selectOptions(within(demo).getByRole('combobox', { name: 'API delay' }), '2000');
+
+    await user.click(within(demo).getByRole('button', { name: 'Reset demo data' }));
+
+    expect(await screen.findByRole('tab', { name: 'Needs review 9' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Verification requested 1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Approved 1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Declined 1' })).toBeInTheDocument();
+    expect(failUpdates).not.toBeChecked();
+    expect(within(demo).getByRole('checkbox', { name: 'Fail loading bookings' })).not.toBeChecked();
+    expect(within(demo).getByRole('combobox', { name: 'API delay' })).toHaveValue('600');
   });
 });

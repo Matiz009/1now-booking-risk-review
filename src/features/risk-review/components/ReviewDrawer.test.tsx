@@ -1,5 +1,5 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { configureApi, resetApi } from '../api/bookingsApi';
 import { RiskReviewPage } from './RiskReviewPage';
@@ -51,7 +51,7 @@ describe('Review drawer', () => {
     expect(points.reduce((sum, p) => sum + p, 0)).toBe(65);
 
     const suggestion = within(drawer).getByRole('region', {
-      name: 'Carisma-style suggestion · rule-based',
+      name: 'Suggested action · rule-based',
     });
     expect(within(suggestion).getByText('Request verification')).toBeInTheDocument();
     expect(
@@ -108,11 +108,11 @@ describe('Review drawer', () => {
     );
     await user.click(within(drawer).getByRole('button', { name: 'Confirm decline' }));
 
-    // Inline error inside the drawer, and the toast as well.
+    // Inline error inside the drawer. No toast: the alert already announces it.
     expect(await within(drawer).findByRole('alert')).toHaveTextContent(
       'Couldn’t decline BK-1007. Your reason is kept; try again.',
     );
-    expect(screen.getByText('Couldn’t decline BK-1007. Change reverted.')).toBeInTheDocument();
+    expect(screen.queryByText(/Change reverted/)).not.toBeInTheDocument();
 
     // The drawer stays open, with the reason still typed and the actions live again.
     expect(screen.getByRole('dialog', { name: 'Jordan Alcott' })).toBe(drawer);
@@ -127,19 +127,16 @@ describe('Review drawer', () => {
     expect(screen.getByRole('tab', { name: 'Declined 1', hidden: true })).toBeInTheDocument();
   });
 
-  it('disables the actions and shows a pending state while the update is in flight', async () => {
+  it('disables the actions and labels the one being saved while the update is in flight', async () => {
     configureApi({ delayMs: 50 });
     const user = await renderLoaded();
     const drawer = await openBooking(user, 'Dana Whitfield');
 
     await user.click(within(drawer).getByRole('button', { name: /^Approve/ }));
 
-    expect(within(drawer).getByText('Saving change…')).toBeInTheDocument();
-    for (const button of within(drawer).getAllByRole('button', {
-      name: /Approve|Request verification|Decline/,
-    })) {
-      expect(button).toBeDisabled();
-    }
+    expect(within(drawer).getByRole('button', { name: 'Approving…' })).toBeDisabled();
+    expect(within(drawer).getByRole('button', { name: 'Request verification' })).toBeDisabled();
+    expect(within(drawer).getByRole('button', { name: 'Decline' })).toBeDisabled();
     expect(await screen.findByText('BK-1001 approved.')).toBeInTheDocument();
   });
 
@@ -165,15 +162,19 @@ describe('Review drawer', () => {
     expect(within(drawer).getByText('Past trips')).toBeInTheDocument();
   });
 
-  it('is read-only for a final booking and shows the decline reason', async () => {
+  it('is read-only for a final booking: when it was decided, the reason, no suggestion', async () => {
     const user = await renderLoaded();
     await user.click(screen.getByRole('tab', { name: /declined/i }));
-    const row = within(screen.getByRole('table')).getAllByRole('row')[1]!;
-    await user.click(within(row).getByRole('button'));
+    const drawer = await openBooking(user, 'Trent Yoakum');
 
-    const drawer = await screen.findByRole('dialog');
-    expect(within(drawer).getByText(/This decision is final/)).toBeInTheDocument();
-    expect(within(drawer).getByText('Reason:')).toBeInTheDocument();
+    const decided = within(drawer).getByRole('region', { name: 'Decided' });
+    expect(decided).toHaveTextContent(
+      /^Decided\s*Declined .+\d{1,2}:\d{2}\s[AP]M\. This decision is final\./,
+    );
+    expect(within(decided).getByText('Reason:')).toBeInTheDocument();
+    expect(
+      within(drawer).queryByRole('region', { name: 'Suggested action · rule-based' }),
+    ).not.toBeInTheDocument();
     expect(
       within(drawer).queryByRole('button', { name: /Approve|Decline|Request verification/ }),
     ).not.toBeInTheDocument();
@@ -201,5 +202,80 @@ describe('Review drawer', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await waitFor(() => expect(renterButton('Jordan Alcott')).toHaveFocus());
+  });
+
+  it('suggests waiting on the renter once verification has been requested', async () => {
+    const user = await renderLoaded();
+    await user.click(screen.getByRole('tab', { name: /verification requested/i }));
+    const drawer = await openBooking(user, 'Tovah Mercer');
+
+    const suggestion = within(drawer).getByRole('region', {
+      name: 'Suggested action · rule-based',
+    });
+    expect(suggestion).toHaveTextContent('Waiting on the renter');
+    expect(suggestion).toHaveTextContent('Approve once they’re verified, or decline.');
+    // Nothing to highlight: the next move is the renter's.
+    expect(within(drawer).queryByRole('button', { name: /Recommended/ })).not.toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: 'Approve' })).toBeEnabled();
+  });
+
+  it('explains a capped score when the signals add up to more than 100', async () => {
+    const user = await renderLoaded();
+
+    const capped = await openBooking(user, 'Victor Sandoval');
+    expect(within(capped).getByText('100 / 100')).toBeInTheDocument();
+    expect(within(capped).getByText('Signals total 130 · score capped at 100')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    const uncapped = await openBooking(user, 'Jordan Alcott');
+    expect(within(uncapped).queryByText(/Signals total/)).not.toBeInTheDocument();
+  });
+
+  it('stays open, reason kept, when a toast or the demo controls are clicked', async () => {
+    // jsdom has no stylesheet, so the pointer-events-auto classes that let the
+    // toasts and demo controls past Radix's `pointer-events: none` on <body>
+    // don't apply here. Skip user-event's pointer-events check; the browser
+    // check covers the CSS.
+    const user = userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never });
+    render(<RiskReviewPage />);
+    await screen.findByRole('tablist', { name: 'Booking status' });
+
+    // Approving one booking leaves a success toast on screen to click later.
+    const first = await openBooking(user, 'Dana Whitfield');
+    await user.click(within(first).getByRole('button', { name: /^Approve/ }));
+    await screen.findByText('BK-1001 approved.');
+
+    const drawer = await openBooking(user, 'Jordan Alcott');
+    const reasonText = 'Renter could not confirm identity by phone.';
+    await user.click(within(drawer).getByRole('button', { name: 'Decline' }));
+    await user.type(
+      within(drawer).getByRole('textbox', { name: 'Reason for declining' }),
+      reasonText,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss notification' }));
+    expect(screen.queryByText('BK-1001 approved.')).not.toBeInTheDocument();
+
+    const demo = screen.getByRole('complementary', { name: 'Demo controls' });
+    const failUpdates = within(demo).getByRole('checkbox', { name: 'Fail status updates' });
+    await user.click(failUpdates);
+    expect(failUpdates).toBeChecked();
+
+    expect(screen.getByRole('dialog', { name: 'Jordan Alcott' })).toBe(drawer);
+    expect(within(drawer).getByRole('textbox', { name: 'Reason for declining' })).toHaveValue(
+      reasonText,
+    );
+  });
+
+  it('is modal: the page behind is hidden from screen readers, except demo controls and toasts', async () => {
+    const user = await renderLoaded();
+
+    const drawer = await openBooking(user, 'Jordan Alcott');
+
+    expect(drawer).toHaveAttribute('aria-modal', 'true');
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    expect(screen.getByRole('complementary', { name: 'Demo controls' })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite');
   });
 });
