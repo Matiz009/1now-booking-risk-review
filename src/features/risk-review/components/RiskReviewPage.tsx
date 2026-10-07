@@ -108,13 +108,17 @@ export function RiskReviewPage() {
   const handleClose = useCallback(() => setSelectedId(null), []);
 
   // Click → useBookings.updateStatus (optimistic update, API call, rollback on
-  // failure) → close the drawer → toast the hook's message.
+  // failure) → close the drawer on success → toast the hook's message.
   const handleAction = useCallback(
     async (bookingId: string, next: BookingStatus, declineReason: string | null) => {
       const outcome = await updateStatus(bookingId, next, declineReason);
-      // Close only if the operator is still looking at this booking.
-      setSelectedId((current) => (current === bookingId ? null : current));
+      // On success, close (if the operator is still looking at this booking).
+      // On failure, keep it open: the drawer shows the error and allows a retry.
+      if (outcome.ok) {
+        setSelectedId((current) => (current === bookingId ? null : current));
+      }
       showToast(outcome.ok ? 'success' : 'error', outcome.message);
+      return outcome;
     },
     [updateStatus, showToast],
   );

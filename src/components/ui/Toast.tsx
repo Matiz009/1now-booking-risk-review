@@ -36,6 +36,8 @@ export function Toast({ toasts, onDismiss }: ToastProps) {
     <div
       role="status"
       aria-live="polite"
+      // Lets the review drawer tell a click on a toast from a click outside it.
+      data-toast-region
       className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 p-4 sm:items-end"
     >
       {toasts.map((toast) => (

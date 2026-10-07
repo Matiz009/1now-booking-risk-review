@@ -6,7 +6,7 @@ import { carName, tripDates } from '../lib/bookingText';
 import { MAX_SCORE } from '../lib/risk.config';
 import { STATUS_LABELS } from '../lib/statusLabels';
 import { nextStatuses } from '../lib/transitions';
-import type { BookingStatus, ScoredBooking } from '../types';
+import type { BookingStatus, ScoredBooking, UpdateOutcome } from '../types';
 import { ActionBar } from './ActionBar';
 import { DeclineReasonForm } from './DeclineReasonForm';
 import { RecommendationCard } from './RecommendationCard';
@@ -19,7 +19,12 @@ type ReviewDrawerProps = {
   item: ScoredBooking | null;
   isPending: boolean;
   onClose: () => void;
-  onAction: (bookingId: string, next: BookingStatus, declineReason: string | null) => void;
+  /** Resolves when the API answers. On failure the drawer stays open to retry. */
+  onAction: (
+    bookingId: string,
+    next: BookingStatus,
+    declineReason: string | null,
+  ) => Promise<UpdateOutcome>;
   /** Called once the drawer has closed, to put focus back where it belongs. */
   onRestoreFocus: () => void;
 };
@@ -54,6 +59,13 @@ export function ReviewDrawer({
             event.preventDefault();
             onRestoreFocus();
           }}
+          // Toasts sit above the overlay. Dismissing one counts as a click
+          // outside the drawer, which would close it and lose a typed reason.
+          onInteractOutside={(event) => {
+            if (event.target instanceof Element && event.target.closest('[data-toast-region]')) {
+              event.preventDefault();
+            }
+          }}
           className="fixed inset-0 z-40 flex flex-col bg-white shadow-xl md:inset-y-0 md:right-0 md:left-auto md:w-[30rem] md:border-l md:border-slate-200"
         >
           {/* `key` remounts the body per booking, so its local state starts fresh. */}
@@ -87,10 +99,23 @@ function DrawerBody({ item, isPending, onAction }: DrawerBodyProps) {
   const [actedFrom, setActedFrom] = useState<BookingStatus | null>(null);
   const actionStatus = isPending && actedFrom ? actedFrom : booking.status;
   const isFinal = nextStatuses(actionStatus).length === 0;
+  // Set when an update fails. The hook has already rolled the booking back,
+  // so the actions are live again; this says what happened, inside the drawer.
+  const [error, setError] = useState<string | null>(null);
 
-  function submit(next: BookingStatus, declineReason: string | null) {
+  async function submit(next: BookingStatus, declineReason: string | null) {
     setActedFrom(booking.status);
-    onAction(booking.id, next, declineReason);
+    setError(null);
+    const outcome = await onAction(booking.id, next, declineReason);
+    // On success the page closes the drawer, so only failure needs handling.
+    // The decline form stays mounted, so the typed reason is still there.
+    if (!outcome.ok) {
+      setError(
+        next === 'declined'
+          ? `Couldn’t decline ${booking.id}. Your reason is kept; try again.`
+          : `${outcome.message} Try again.`,
+      );
+    }
   }
 
   function handleAction(next: BookingStatus) {
@@ -185,7 +210,15 @@ function DrawerBody({ item, isPending, onAction }: DrawerBodyProps) {
       </div>
 
       {!isFinal && (
-        <footer className="border-t border-slate-200 p-4">
+        <footer className="space-y-3 border-t border-slate-200 p-4">
+          {error && (
+            <p
+              role="alert"
+              className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800"
+            >
+              {error}
+            </p>
+          )}
           {isDeclining ? (
             <DeclineReasonForm
               isPending={isPending}

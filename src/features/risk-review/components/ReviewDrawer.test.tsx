@@ -95,23 +95,36 @@ describe('Review drawer', () => {
     expect(renterButton('Jordan Alcott')).toBeInTheDocument();
   });
 
-  it('rolls the booking back to Needs review with an error toast when the update fails', async () => {
+  it('keeps the drawer open with the reason and an inline error when the update fails', async () => {
     const user = await renderLoaded();
     await user.click(screen.getByRole('checkbox', { name: 'Fail status updates' }));
     const drawer = await openBooking(user, 'Jordan Alcott');
+    const reasonText = 'Renter could not confirm identity by phone.';
 
-    await user.click(within(drawer).getByRole('button', { name: /Request verification/ }));
-
-    expect(
-      await screen.findByText('Couldn’t request verification for BK-1007. Change reverted.'),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Needs review 9' })).toHaveAttribute(
-      'aria-selected',
-      'true',
+    await user.click(within(drawer).getByRole('button', { name: 'Decline' }));
+    await user.type(
+      within(drawer).getByRole('textbox', { name: 'Reason for declining' }),
+      reasonText,
     );
-    expect(screen.getByRole('tab', { name: 'Verification requested 1' })).toBeInTheDocument();
-    expect(renterButton('Jordan Alcott')).toBeInTheDocument();
+    await user.click(within(drawer).getByRole('button', { name: 'Confirm decline' }));
+
+    // Inline error inside the drawer, and the toast as well.
+    expect(await within(drawer).findByRole('alert')).toHaveTextContent(
+      'Couldn’t decline BK-1007. Your reason is kept; try again.',
+    );
+    expect(screen.getByText('Couldn’t decline BK-1007. Change reverted.')).toBeInTheDocument();
+
+    // The drawer stays open, with the reason still typed and the actions live again.
+    expect(screen.getByRole('dialog', { name: 'Jordan Alcott' })).toBe(drawer);
+    expect(within(drawer).getByRole('textbox', { name: 'Reason for declining' })).toHaveValue(
+      reasonText,
+    );
+    expect(within(drawer).getByRole('button', { name: 'Confirm decline' })).toBeEnabled();
+    expect(within(drawer).getByText('Needs review')).toBeInTheDocument();
+
+    // Behind the modal (aria-hidden, hence `hidden: true`) it's back in Needs review.
+    expect(screen.getByRole('tab', { name: 'Needs review 9', hidden: true })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Declined 1', hidden: true })).toBeInTheDocument();
   });
 
   it('disables the actions and shows a pending state while the update is in flight', async () => {
