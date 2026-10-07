@@ -110,6 +110,16 @@ describe('RiskReviewPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows the sort hint only on the Needs review tab', async () => {
+    const user = userEvent.setup();
+    await renderLoaded();
+
+    await user.click(screen.getByRole('tab', { name: /declined/i }));
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByText(/Sorted by risk/)).not.toBeInTheDocument();
+  });
+
   it('switches tabs and shows only that status', async () => {
     const user = userEvent.setup();
     await renderLoaded();
@@ -161,6 +171,8 @@ describe('RiskReviewPage', () => {
 
     expect(await screen.findByRole('table')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    // Keyboard users land on the selected tab, not at the top of the page.
+    expect(screen.getByRole('tab', { name: /needs review/i })).toHaveFocus();
   });
 
   it('lets the demo controls force a load failure', async () => {

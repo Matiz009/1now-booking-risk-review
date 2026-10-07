@@ -60,10 +60,11 @@ export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTa
                 </td>
                 <td className="px-4 py-3">
                   {/* No onClick of its own: a click (or Enter/Space, which browsers turn
-                      into a click) bubbles up to the row's onClick, so onSelect runs once. */}
+                      into a click) bubbles up to the row's onClick, so onSelect runs once.
+                      mb-1.5 keeps its focus outline (2px + 2px offset) clear of the id line. */}
                   <button
                     type="button"
-                    className="rounded-sm text-left font-medium text-slate-900 hover:underline"
+                    className="mb-1.5 rounded-sm text-left font-medium text-slate-900 hover:underline"
                   >
                     {booking.renter.fullName}
                   </button>

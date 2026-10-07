@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Toast, type ToastMessage } from '@/components/ui/Toast';
+import { Toast } from '@/components/ui/Toast';
+import { useToasts } from '@/components/ui/useToasts';
 import { useBookings } from '../hooks/useBookings';
 import { sortQueue } from '../lib/sortQueue';
 import { STATUS_LABELS, statusTabId } from '../lib/statusLabels';
@@ -12,7 +13,6 @@ import { DevPanel } from './DevPanel';
 import { StatusTabs } from './StatusTabs';
 
 const PANEL_ID = 'risk-review-panel';
-const TOAST_DURATION_MS = 5000;
 const SKELETON_ROWS = 5;
 
 const EMPTY_TEXT: Record<BookingStatus, { title: string; description: string }> = {
@@ -42,8 +42,11 @@ export function RiskReviewPage() {
   const { scoredBookings, loadStatus, pendingIds, reload, apiSettings, updateApiSettings } =
     useBookings();
   const [activeTab, setActiveTab] = useState<BookingStatus>('needs_review');
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const nextToastId = useRef(1);
+  const { toasts, showToast, dismissToast } = useToasts();
+
+  // Set by Retry, read once the reload lands. A ref, because flipping it
+  // shouldn't re-render anything.
+  const focusTabAfterLoad = useRef(false);
 
   const counts = useMemo(() => {
     const result: Record<BookingStatus, number> = {
@@ -63,18 +66,20 @@ export function RiskReviewPage() {
     [scoredBookings, activeTab],
   );
 
-  const dismissToast = useCallback((id: number) => {
-    setToasts((current) => current.filter((toast) => toast.id !== id));
-  }, []);
+  // The Retry button disappears while reloading, which drops focus to the top
+  // of the page. Once the queue is back, put keyboard users on the selected tab.
+  // An effect is right here: moving focus is a side effect on the DOM.
+  useEffect(() => {
+    if (loadStatus === 'ready' && focusTabAfterLoad.current) {
+      focusTabAfterLoad.current = false;
+      document.getElementById(statusTabId(activeTab))?.focus();
+    }
+  }, [loadStatus, activeTab]);
 
-  const showToast = useCallback(
-    (tone: ToastMessage['tone'], message: string) => {
-      const id = nextToastId.current++;
-      setToasts((current) => [...current, { id, tone, message }]);
-      window.setTimeout(() => dismissToast(id), TOAST_DURATION_MS);
-    },
-    [dismissToast],
-  );
+  const handleRetry = useCallback(() => {
+    focusTabAfterLoad.current = true;
+    reload();
+  }, [reload]);
 
   // Placeholder until Phase 5 opens the review drawer here instead.
   const handleSelect = useCallback(
@@ -97,7 +102,7 @@ export function RiskReviewPage() {
         <ErrorState
           title="Couldn’t load bookings"
           message="Check your connection and try again."
-          onRetry={reload}
+          onRetry={handleRetry}
         />
       )}
 
@@ -114,9 +119,12 @@ export function RiskReviewPage() {
               <EmptyState {...EMPTY_TEXT[activeTab]} />
             ) : (
               <>
-                <p className="mb-3 text-sm text-slate-600">
-                  Sorted by risk · bookings awaiting ID checks first
-                </p>
+                {/* Every tab is sorted the same way, but the order only drives work in Needs review. */}
+                {activeTab === 'needs_review' && (
+                  <p className="mb-3 text-sm text-slate-600">
+                    Sorted by risk · bookings awaiting ID checks first
+                  </p>
+                )}
                 <BookingTable
                   items={visible}
                   caption={`${STATUS_LABELS[activeTab]} bookings`}

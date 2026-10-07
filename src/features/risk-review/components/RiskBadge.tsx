@@ -6,7 +6,8 @@ const LEVEL_TONES: Record<RiskLevel, BadgeTone> = {
   low: 'success',
   medium: 'warning',
   high: 'danger',
-  unscored: 'warning',
+  // Blue, a colour no risk level uses: pending is "not scored yet", not a level.
+  unscored: 'info',
 };
 
 const LEVEL_DOTS: Record<Exclude<RiskLevel, 'unscored'>, string> = {
@@ -27,8 +28,8 @@ type RiskBadgeProps = {
 
 /**
  * "High risk · 90" or "ID check pending". The words carry the level; colour is
- * a second cue. Pending shares Medium's amber, so it gets a clock icon instead
- * of a dot to tell the two apart at a glance.
+ * a second cue. Pending is blue with a clock icon instead of a dot, so it can't
+ * be mistaken for any risk level.
  */
 export function RiskBadge({ risk }: RiskBadgeProps) {
   if (risk.level === 'unscored') {
