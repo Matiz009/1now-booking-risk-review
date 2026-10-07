@@ -1,5 +1,5 @@
 /**
- * The four date helpers this project actually needs, instead of a date library.
+ * The date helpers this project actually needs, instead of a date library.
  *
  * All of them are pure and take explicit arguments — no `Date.now()` anywhere —
  * so anything built on top of them is deterministic and testable.
@@ -23,6 +23,14 @@ export function addHours(date: Date, hours: number): Date {
 
 export function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * MS_PER_DAY);
+}
+
+/**
+ * Fractional minutes from `from` to `to`. Negative when `to` is earlier.
+ * Exact for whole minutes, so "179 vs 180 minutes" edges compare cleanly.
+ */
+export function minutesBetween(from: Date, to: Date): number {
+  return (to.getTime() - from.getTime()) / MS_PER_MINUTE;
 }
 
 /** Fractional hours from `from` to `to`. Negative when `to` is earlier. */

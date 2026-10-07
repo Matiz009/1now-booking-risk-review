@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, addHours, addMinutes, daysBetween, hoursBetween } from '@/lib/datetime';
+import {
+  addDays,
+  addHours,
+  addMinutes,
+  daysBetween,
+  hoursBetween,
+  minutesBetween,
+} from '@/lib/datetime';
 
 // A fixed instant. Using UTC so the test means the same thing on any machine.
 const base = new Date('2026-10-07T12:00:00.000Z');
@@ -29,8 +36,9 @@ describe('addMinutes / addHours / addDays', () => {
   });
 });
 
-describe('hoursBetween / daysBetween', () => {
+describe('minutesBetween / hoursBetween / daysBetween', () => {
   it('measures forward distance', () => {
+    expect(minutesBetween(base, addMinutes(base, 179))).toBe(179);
     expect(hoursBetween(base, addHours(base, 3))).toBe(3);
     expect(daysBetween(base, addDays(base, 14))).toBe(14);
   });
