@@ -122,3 +122,20 @@ export type ScoredBooking = {
   risk: RiskResult;
   recommendation: Recommendation;
 };
+
+// ---------------------------------------------------------------------------
+// Loading and updating — the contract between useBookings and the page
+// ---------------------------------------------------------------------------
+
+/** Starts at `loading`: the hook fetches on mount, so there's no idle moment to show. */
+export type LoadStatus = 'loading' | 'ready' | 'error';
+
+/**
+ * What `updateStatus` resolves to. The hook never throws at the page; it
+ * reports, and the page turns `message` into a toast.
+ */
+export type UpdateOutcome = {
+  ok: boolean;
+  /** Ready to show, e.g. "Booking BK-1042 declined." or "Couldn't decline BK-1042. Change reverted." */
+  message: string;
+};
