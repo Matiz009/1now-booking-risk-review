@@ -4,6 +4,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Toast } from '@/components/ui/Toast';
 import { useToasts } from '@/components/ui/useToasts';
+import { matchesMedia } from '@/lib/media';
 import { useBookings } from '../hooks/useBookings';
 import { sortQueue } from '../lib/sortQueue';
 import { STATUS_LABELS, statusTabId } from '../lib/statusLabels';
@@ -15,6 +16,13 @@ import { StatusTabs } from './StatusTabs';
 
 const PANEL_ID = 'risk-review-panel';
 const SKELETON_ROWS = 5;
+
+// Tailwind's `md` breakpoint. Below it the drawer is a full-screen sheet.
+const MD_UP = '(min-width: 48rem)';
+// Wide enough for the open demo controls (1rem gap + 22rem) to sit beside the
+// 30rem drawer with a 1rem gap between them. Keep in step with DevPanel and
+// ReviewDrawer's widths.
+const ROOM_BESIDE_DRAWER = '(min-width: 54rem)';
 
 const EMPTY_TEXT: Record<BookingStatus, { title: string; description: string }> = {
   needs_review: {
@@ -58,7 +66,11 @@ export function RiskReviewPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Why the last update from the drawer failed, shown inside the drawer.
   const [drawerError, setDrawerError] = useState<string | null>(null);
-  const { toasts, showToast, dismissToast } = useToasts();
+  const { toasts, showToast, dismissToast, dismissTone } = useToasts();
+  // Whether the demo controls are expanded. Collapsed from the start on phones,
+  // where they'd cover the page. Passing a function to useState runs it once,
+  // on the first render only, instead of on every render.
+  const [isDemoOpen, setIsDemoOpen] = useState(() => matchesMedia(MD_UP));
 
   // The booking open in the drawer right now, as a ref, so handleAction can
   // read it after its `await` (state captured before the await would be stale).
@@ -106,12 +118,23 @@ export function RiskReviewPage() {
 
   const selected = scoredBookings.find(({ booking }) => booking.id === selectedId) ?? null;
 
-  const handleSelect = useCallback((bookingId: string) => {
-    openId.current = bookingId;
-    lastSelectedId.current = bookingId;
-    setSelectedId(bookingId);
-    setDrawerError(null);
-  }, []);
+  const handleSelect = useCallback(
+    (bookingId: string) => {
+      openId.current = bookingId;
+      lastSelectedId.current = bookingId;
+      setSelectedId(bookingId);
+      setDrawerError(null);
+      // Old success toasts would sit on top of the drawer's action buttons.
+      // Error toasts stay: they report something that still needs attention.
+      dismissTone('success');
+      // Without room beside the drawer, fold the demo controls down to their
+      // small bar so they don't cover it. The operator can still expand them.
+      if (!matchesMedia(ROOM_BESIDE_DRAWER)) {
+        setIsDemoOpen(false);
+      }
+    },
+    [dismissTone],
+  );
 
   const handleClose = useCallback(() => {
     openId.current = null;
@@ -220,6 +243,9 @@ export function RiskReviewPage() {
 
       <DevPanel
         settings={apiSettings}
+        isOpen={isDemoOpen}
+        onOpenChange={setIsDemoOpen}
+        isDrawerOpen={selected !== null}
         onChange={updateApiSettings}
         onReload={reload}
         onReset={resetDemo}

@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { configureApi, resetApi, updateBookingStatus } from '../api/bookingsApi';
 import { mockBookings } from '../data/bookings.mock';
 import { RiskReviewPage } from './RiskReviewPage';
@@ -229,5 +229,75 @@ describe('RiskReviewPage', () => {
     expect(failUpdates).not.toBeChecked();
     expect(within(demo).getByRole('checkbox', { name: 'Fail loading bookings' })).not.toBeChecked();
     expect(within(demo).getByRole('combobox', { name: 'API delay' })).toHaveValue('600');
+  });
+});
+
+/**
+ * jsdom has no matchMedia (the page then assumes a wide screen). This stands in
+ * for a window `px` wide, answering the `min-width: Nrem` queries the page asks.
+ */
+function mockWindowWidth(px: number) {
+  vi.stubGlobal('matchMedia', (query: string) => {
+    const minRem = Number(query.match(/min-width:\s*([\d.]+)rem/)?.[1] ?? 0);
+    return { matches: px >= minRem * 16, media: query };
+  });
+}
+
+describe('Demo controls placement', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function demoControls() {
+    return screen.getByRole('complementary', { name: 'Demo controls' });
+  }
+
+  function failLoadSwitch() {
+    return within(demoControls()).getByRole('checkbox', { name: 'Fail loading bookings' });
+  }
+
+  it('starts collapsed on a phone, stays collapsed over the drawer, and still expands by hand', async () => {
+    mockWindowWidth(390);
+    // The drawer sets pointer-events: none on <body>; the CSS that lets the
+    // demo controls through isn't loaded in jsdom.
+    const user = userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never });
+    await renderLoaded();
+    expect(failLoadSwitch()).not.toBeVisible();
+
+    await user.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Jordan Alcott' }),
+    );
+    await screen.findByRole('dialog', { name: 'Jordan Alcott' });
+    expect(failLoadSwitch()).not.toBeVisible();
+
+    await user.click(within(demoControls()).getByText('Demo controls'));
+    expect(failLoadSwitch()).toBeVisible();
+  });
+
+  it('collapses when a drawer opens without room beside it (800px wide)', async () => {
+    mockWindowWidth(800);
+    const user = userEvent.setup();
+    await renderLoaded();
+    expect(failLoadSwitch()).toBeVisible();
+
+    await user.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Jordan Alcott' }),
+    );
+    await screen.findByRole('dialog', { name: 'Jordan Alcott' });
+
+    expect(failLoadSwitch()).not.toBeVisible();
+  });
+
+  it('stays expanded when there is room beside the drawer (1280px wide)', async () => {
+    mockWindowWidth(1280);
+    const user = userEvent.setup();
+    await renderLoaded();
+
+    await user.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Jordan Alcott' }),
+    );
+    await screen.findByRole('dialog', { name: 'Jordan Alcott' });
+
+    expect(failLoadSwitch()).toBeVisible();
   });
 });

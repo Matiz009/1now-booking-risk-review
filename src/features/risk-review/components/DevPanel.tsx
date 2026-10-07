@@ -1,11 +1,17 @@
 import { useId } from 'react';
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/cn';
 import type { ApiConfig } from '../types';
 
 const DELAY_OPTIONS = [0, 600, 2000];
 
 type DevPanelProps = {
   settings: ApiConfig;
+  /** Expanded (true) or folded down to its title bar (false). */
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  /** While the review drawer is open, the panel stays to its left from `md` up. */
+  isDrawerOpen: boolean;
   onChange: (next: Partial<ApiConfig>) => void;
   onReload: () => void;
   onReset: () => void;
@@ -24,18 +30,35 @@ type DevPanelProps = {
  * - `aria-live="off"`: Radix hides everything outside the dialog from screen
  *   readers using the aria-hidden package, which skips elements that have an
  *   aria-live attribute. "off" is the default politeness, so nothing is announced.
- * A native <details> lets it collapse out of the way, with no state to manage.
+ * A native <details> lets it collapse out of the way. Its open state lives in
+ * the page, so the page can collapse it when the drawer needs the room;
+ * `onToggle` reports clicks on the title bar back up.
  */
-export function DevPanel({ settings, onChange, onReload, onReset }: DevPanelProps) {
+export function DevPanel({
+  settings,
+  isOpen,
+  onOpenChange,
+  isDrawerOpen,
+  onChange,
+  onReload,
+  onReset,
+}: DevPanelProps) {
   const id = useId();
 
   return (
     <aside
       aria-labelledby={`${id}-heading`}
       aria-live="off"
-      className="pointer-events-auto fixed bottom-4 left-4 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-lg border-2 border-dashed border-amber-400 bg-[repeating-linear-gradient(135deg,var(--color-amber-50)_0_12px,var(--color-white)_12px_24px)] shadow-lg"
+      className={cn(
+        'pointer-events-auto fixed bottom-4 left-4 z-50 rounded-lg border-2 border-dashed border-amber-400 bg-[repeating-linear-gradient(135deg,var(--color-amber-50)_0_12px,var(--color-white)_12px_24px)] shadow-lg',
+        // Collapsed, it shrinks to its title so it stays a small bar.
+        isOpen ? 'w-[min(22rem,calc(100vw-2rem))]' : 'w-auto',
+        // From md the drawer is 30rem wide on the right: never reach under it,
+        // even when expanded by hand (1rem gap each side).
+        isDrawerOpen && 'md:max-w-[calc(100vw-30rem-2rem)]',
+      )}
     >
-      <details open>
+      <details open={isOpen} onToggle={(event) => onOpenChange(event.currentTarget.open)}>
         <summary className="cursor-pointer rounded-md px-3 py-2">
           <h2 id={`${id}-heading`} className="inline text-sm font-semibold text-amber-900">
             Demo controls

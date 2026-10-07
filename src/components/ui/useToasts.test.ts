@@ -45,4 +45,21 @@ describe('useToasts', () => {
 
     expect(result.current.toasts).toEqual([]);
   });
+
+  it('removes every toast of one tone and keeps the rest', () => {
+    const { result } = renderHook(() => useToasts());
+    act(() => {
+      result.current.showToast('success', 'BK-1001 approved.');
+      result.current.showToast('error', 'Couldn’t approve BK-1002. Change reverted.');
+      result.current.showToast('success', 'BK-1003 declined.');
+    });
+
+    act(() => {
+      result.current.dismissTone('success');
+    });
+
+    expect(result.current.toasts.map((toast) => toast.message)).toEqual([
+      'Couldn’t approve BK-1002. Change reverted.',
+    ]);
+  });
 });

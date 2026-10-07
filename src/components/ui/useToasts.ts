@@ -13,6 +13,12 @@ export function useToasts() {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
+  // Clears every toast of one tone at once, e.g. old success messages that
+  // would sit on top of a drawer that has just opened.
+  const dismissTone = useCallback((tone: ToastMessage['tone']) => {
+    setToasts((current) => current.filter((toast) => toast.tone !== tone));
+  }, []);
+
   const showToast = useCallback((tone: ToastMessage['tone'], message: string) => {
     const id = nextId.current++;
     // A toast with the same text replaces the old one instead of stacking a
@@ -23,5 +29,5 @@ export function useToasts() {
     ]);
   }, []);
 
-  return { toasts, showToast, dismissToast };
+  return { toasts, showToast, dismissToast, dismissTone };
 }

@@ -33,6 +33,19 @@ async function openBooking(user: User, renter: string) {
   return screen.findByRole('dialog', { name: renter });
 }
 
+/**
+ * Leaves an error toast on screen: approve BK-1001 with failures on, and close
+ * the drawer before the API answers, so the failure can't be shown inline.
+ */
+async function leaveErrorToast(user: User) {
+  configureApi({ failUpdate: true, delayMs: 50 });
+  const drawer = await openBooking(user, 'Dana Whitfield');
+  await user.click(within(drawer).getByRole('button', { name: /^Approve/ }));
+  await user.keyboard('{Escape}');
+  await screen.findByText(/Couldn’t approve BK-1001/);
+  configureApi({ failUpdate: false, delayMs: 0 });
+}
+
 describe('Review drawer', () => {
   it('shows the booking, its signals highest first, and the recommendation', async () => {
     const user = await renderLoaded();
@@ -240,10 +253,8 @@ describe('Review drawer', () => {
     render(<RiskReviewPage />);
     await screen.findByRole('tablist', { name: 'Booking status' });
 
-    // Approving one booking leaves a success toast on screen to click later.
-    const first = await openBooking(user, 'Dana Whitfield');
-    await user.click(within(first).getByRole('button', { name: /^Approve/ }));
-    await screen.findByText('BK-1001 approved.');
+    // Error toasts stay up when a drawer opens, so leave one to click later.
+    await leaveErrorToast(user);
 
     const drawer = await openBooking(user, 'Jordan Alcott');
     const reasonText = 'Renter could not confirm identity by phone.';
@@ -254,7 +265,7 @@ describe('Review drawer', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Dismiss notification' }));
-    expect(screen.queryByText('BK-1001 approved.')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Couldn’t approve BK-1001/)).not.toBeInTheDocument();
 
     const demo = screen.getByRole('complementary', { name: 'Demo controls' });
     const failUpdates = within(demo).getByRole('checkbox', { name: 'Fail status updates' });
@@ -265,6 +276,23 @@ describe('Review drawer', () => {
     expect(within(drawer).getByRole('textbox', { name: 'Reason for declining' })).toHaveValue(
       reasonText,
     );
+  });
+
+  it('clears success toasts when a drawer opens, so they never cover its buttons; error toasts stay', async () => {
+    const user = await renderLoaded();
+    await leaveErrorToast(user);
+    const first = await openBooking(user, 'Jordan Alcott');
+    await user.click(within(first).getByRole('button', { name: /^Request verification/ }));
+    await screen.findByText('Verification requested for BK-1007.');
+    expect(screen.getAllByRole('button', { name: 'Dismiss notification' })).toHaveLength(2);
+
+    await openBooking(user, 'Victor Sandoval');
+
+    const toasts = screen.getByRole('status');
+    expect(
+      within(toasts).queryByText('Verification requested for BK-1007.'),
+    ).not.toBeInTheDocument();
+    expect(within(toasts).getByText(/Couldn’t approve BK-1001/)).toBeInTheDocument();
   });
 
   it('is modal: the page behind is hidden from screen readers, except demo controls and toasts', async () => {
