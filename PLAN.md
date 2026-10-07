@@ -1,10 +1,8 @@
 # PLAN.md: Booking Risk Review (build, test, understand)
 
-**Deadline:** Friday 9 Oct 2026, midnight. **Target submit:** Friday afternoon.
+This is the phase plan I gave Claude Code. Each phase ended with a report I reviewed before saying 'next'.
 
 **Your role:** Claude Code builds. You review, test and understand. After every phase you run the checks below yourself and complete the "explain it" items out loud without looking at the code. If you can't, ask Claude Code: _"Explain [file] line by line as if I'll be quizzed on it."_ Don't move on until you can.
-
-**Your log (keep it open the whole time):** `NOTES.md` in the repo root, not committed until Friday. Every time Claude Code gets something wrong, write: what it did, how you noticed, what you changed. That's your interview story and your README section.
 
 ---
 
@@ -54,8 +52,6 @@ For every next phase: `Phase N. Follow CLAUDE.md. List the files first, then bui
 
 **Explain it:** why logic is pure and separate from React; why `now` is a parameter; walk through scoring one high-risk booking by hand.
 
-**Live drill:** add a new signal "booking made between 1am and 5am, +10" with a test, without AI. Target: 15 min.
-
 ## Phase 3: Mock API + `useBookings` (Wed evening, ~2 hrs)
 
 **Claude builds:** `bookingsApi.ts` (`getBookings`, `updateBookingStatus`, 600 ms delay, failure toggle), `useBookings` with `useReducer`, optimistic update + rollback, derived risk via `useMemo`.
@@ -81,8 +77,6 @@ For every next phase: `Phase N. Follow CLAUDE.md. List the files first, then bui
 
 **Explain it:** which state lives in the hook vs the page and why; how the table/card switch works.
 
-**Live drill:** add a "Car" filter dropdown, or sort by total. Target: 15 min.
-
 ## Phase 5: Drawer + actions (Thu afternoon, ~3 hrs)
 
 **Claude builds:** `ReviewDrawer` (Radix Dialog), `SignalList`, `RecommendationCard`, `ActionBar`, `DeclineReasonForm`, toasts, component tests for the critical flow.
@@ -97,8 +91,6 @@ For every next phase: `Phase N. Follow CLAUDE.md. List the files first, then bui
 - [ ] Component tests pass
 
 **Explain it:** how the drawer gets its booking; the full path of a click from button → hook → API → state → UI; how rollback restores the old state.
-
-**Live drill:** add a "Hold" status end to end (type, transition, button, tab, test). Target: 20–25 min. This is the most likely kind of interview change.
 
 ## Phase 6: Polish + README (Thu evening, ~1.5 hrs)
 
@@ -117,8 +109,7 @@ For every next phase: `Phase N. Follow CLAUDE.md. List the files first, then bui
 - [ ] Fresh clone → `npm install` → `npm run dev` works
 - [ ] Deploy to Vercel; test the live link on your phone
 - [ ] Repo public or shared; link the live demo in the README
-- [ ] Record the Loom (script below), 2–3 takes, under 3 min
-- [ ] Submit, then reply to the HR email
+- [ ] Record the Loom, 2–3 takes, under 3 min
 
 ---
 
@@ -132,23 +123,3 @@ For every next phase: `Phase N. Follow CLAUDE.md. List the files first, then bui
 6. **Left out and why:** auth, backend, Vouched, Stripe, messaging, Carisma integration.
 7. **How I used Claude Code:** CLAUDE.md, plan mode, phase-by-phase review, and where I corrected it.
 8. **Next steps:** plug in real ID results, operator-tunable rules, maintenance scheduling, payout reconciliation.
-
-## Loom script (≤ 3 min)
-
-- **0:00–0:20:** who you are, one line.
-- **0:20–0:45:** the problem + one-sentence pitch.
-- **0:45–2:15:** demo: queue → open high-risk booking → signals → recommendation → decline with reason → ID-pending case → failure + rollback via DevPanel → mobile view.
-- **2:15–2:45:** what you left out and why; one Claude Code correction.
-- **2:45–3:00:** next step you'd build.
-
-## Interview questions to rehearse
-
-- Why Vite and not Next.js? How would you port it?
-- Why is the risk logic pure and outside React?
-- Walk me through what happens when I click Decline.
-- What happens if the API fails mid-update?
-- Why are scores derived and not stored?
-- How did you make the drawer accessible?
-- Where was Claude Code wrong, and how did you catch it?
-- What would you change to support 5,000 bookings? (pagination/virtualisation, server-side scoring)
-- How would this connect to Carisma and Vouched in production?
