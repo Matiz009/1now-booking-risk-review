@@ -33,7 +33,7 @@ export function StatusTabs({ active, counts, onChange, panelId }: StatusTabsProp
     <div
       role="tablist"
       aria-label="Booking status"
-      className="grid grid-cols-2 gap-1 rounded-lg bg-slate-200/70 p-1 sm:flex"
+      className="grid auto-rows-fr grid-cols-2 gap-1 rounded-lg bg-slate-200/70 p-1 sm:flex"
     >
       {STATUS_ORDER.map((status, index) => {
         const isActive = status === active;

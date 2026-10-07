@@ -73,6 +73,43 @@ describe('RiskReviewPage', () => {
     expect(within(table).getByText('Low risk · 0')).toBeInTheDocument();
   });
 
+  it('opens a booking from the renter button, with one Tab stop per row', async () => {
+    const user = userEvent.setup();
+    await renderLoaded();
+    const table = screen.getByRole('table');
+    const renterButton = within(table).getByRole('button', { name: 'Noor Haddad' });
+    const row = renterButton.closest('tr')!;
+
+    // The row itself is not a Tab stop; the renter button is its only one.
+    expect(row).not.toHaveAttribute('tabindex');
+    expect(within(row).getAllByRole('button')).toHaveLength(1);
+
+    renterButton.focus();
+    await user.keyboard('{Enter}');
+
+    // Placeholder until Phase 5: selecting a booking announces it in a toast.
+    expect(await screen.findByText(/Review drawer for BK-1009/)).toBeInTheDocument();
+  });
+
+  it('opens each booking exactly once when its renter button is clicked', async () => {
+    const user = userEvent.setup();
+    await renderLoaded();
+    const table = screen.getByRole('table');
+
+    await user.click(within(table).getAllByRole('button')[1]!);
+
+    // The click bubbles to the row's handler; it must not also fire a second time.
+    expect(screen.getAllByText(/Review drawer for BK-1010/)).toHaveLength(1);
+  });
+
+  it('explains the queue order above the list', async () => {
+    await renderLoaded();
+
+    expect(
+      screen.getByText('Sorted by risk · bookings awaiting ID checks first'),
+    ).toBeInTheDocument();
+  });
+
   it('switches tabs and shows only that status', async () => {
     const user = userEvent.setup();
     await renderLoaded();
@@ -117,6 +154,7 @@ describe('RiskReviewPage', () => {
 
     const alert = await screen.findByRole('alert');
     expect(within(alert).getByRole('heading', { name: 'Couldn’t load bookings' })).toBeVisible();
+    expect(within(alert).getByText('Check your connection and try again.')).toBeVisible();
 
     configureApi({ failLoad: false });
     await user.click(within(alert).getByRole('button', { name: 'Retry' }));

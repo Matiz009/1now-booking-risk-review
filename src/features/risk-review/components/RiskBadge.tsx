@@ -6,14 +6,13 @@ const LEVEL_TONES: Record<RiskLevel, BadgeTone> = {
   low: 'success',
   medium: 'warning',
   high: 'danger',
-  unscored: 'neutral',
+  unscored: 'warning',
 };
 
-const LEVEL_DOTS: Record<RiskLevel, string> = {
+const LEVEL_DOTS: Record<Exclude<RiskLevel, 'unscored'>, string> = {
   low: 'bg-risk-low',
   medium: 'bg-risk-medium',
   high: 'bg-risk-high',
-  unscored: 'border border-slate-500 bg-transparent',
 };
 
 const LEVEL_LABELS: Record<Exclude<RiskLevel, 'unscored'>, string> = {
@@ -26,17 +25,43 @@ type RiskBadgeProps = {
   risk: RiskResult;
 };
 
-/** "High risk · 90" or "ID check pending". The words carry the level; colour is a second cue. */
+/**
+ * "High risk · 90" or "ID check pending". The words carry the level; colour is
+ * a second cue. Pending shares Medium's amber, so it gets a clock icon instead
+ * of a dot to tell the two apart at a glance.
+ */
 export function RiskBadge({ risk }: RiskBadgeProps) {
-  const text =
-    risk.level === 'unscored'
-      ? 'ID check pending'
-      : `${LEVEL_LABELS[risk.level]} risk · ${risk.score}`;
+  if (risk.level === 'unscored') {
+    return (
+      <Badge tone={LEVEL_TONES.unscored}>
+        <ClockIcon />
+        ID check pending
+      </Badge>
+    );
+  }
 
   return (
     <Badge tone={LEVEL_TONES[risk.level]}>
       <span aria-hidden="true" className={cn('size-2 rounded-full', LEVEL_DOTS[risk.level])} />
-      {text}
+      {`${LEVEL_LABELS[risk.level]} risk · ${risk.score}`}
     </Badge>
+  );
+}
+
+/** Decorative: the badge text already says "pending", so screen readers skip it. */
+function ClockIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      className="size-3"
+    >
+      <circle cx="8" cy="8" r="6.25" />
+      <path d="M8 4.75V8l2.25 1.5" />
+    </svg>
   );
 }

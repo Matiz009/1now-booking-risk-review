@@ -50,7 +50,7 @@ export function Toast({ toasts, onDismiss }: ToastProps) {
             type="button"
             aria-label="Dismiss notification"
             onClick={() => onDismiss(toast.id)}
-            className="-m-1 rounded p-1 text-slate-500 hover:text-slate-900"
+            className="-my-1.5 -mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded text-lg leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-900"
           >
             <span aria-hidden="true">×</span>
           </button>

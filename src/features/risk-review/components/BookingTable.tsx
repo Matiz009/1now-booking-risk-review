@@ -1,4 +1,3 @@
-import type { KeyboardEvent } from 'react';
 import { formatCurrency, formatDateRange } from '@/lib/format';
 import type { Booking, ScoredBooking } from '../types';
 import { RiskBadge } from './RiskBadge';
@@ -9,7 +8,7 @@ type BookingTableProps = {
   /** Read by screen readers as the table's name, e.g. "Needs review bookings". */
   caption: string;
   pendingIds: string[];
-  /** Called with the booking id on click, Enter or Space. Opens the drawer in Phase 5. */
+  /** Called with the booking id when a row, its renter button or a card is activated. */
   onSelect: (bookingId: string) => void;
 };
 
@@ -20,18 +19,11 @@ type BookingTableProps = {
  * horizontal scrolling.
  */
 export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTableProps) {
-  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, bookingId: string) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault(); // Space would otherwise scroll the page.
-      onSelect(bookingId);
-    }
-  }
-
   return (
     <>
       <div className="hidden overflow-hidden rounded-lg border border-slate-200 bg-white md:block">
         <table className="w-full text-left text-sm">
-          <caption className="sr-only">{caption}. Select a row to review the booking.</caption>
+          <caption className="sr-only">{caption}. Select a renter to review the booking.</caption>
           <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-600">
             <tr>
               <th scope="col" className="px-4 py-3">
@@ -56,20 +48,25 @@ export function BookingTable({ items, caption, pendingIds, onSelect }: BookingTa
           </thead>
           <tbody className="divide-y divide-slate-100">
             {items.map(({ booking, risk }) => (
-              // tabIndex makes the row itself focusable, so keyboard users can open it
-              // with Enter and Phase 5 can return focus here when the drawer closes.
+              // The whole row is a mouse target. The renter button below is the one
+              // keyboard and screen-reader entry point, so each row is one Tab stop.
               <tr
                 key={booking.id}
-                tabIndex={0}
                 onClick={() => onSelect(booking.id)}
-                onKeyDown={(event) => handleRowKeyDown(event, booking.id)}
-                className="cursor-pointer hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:ring-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-slate-900"
+                className="cursor-pointer hover:bg-slate-50"
               >
                 <td className="px-4 py-3">
                   <RiskBadge risk={risk} />
                 </td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-slate-900">{booking.renter.fullName}</div>
+                  {/* No onClick of its own: a click (or Enter/Space, which browsers turn
+                      into a click) bubbles up to the row's onClick, so onSelect runs once. */}
+                  <button
+                    type="button"
+                    className="rounded-sm text-left font-medium text-slate-900 hover:underline"
+                  >
+                    {booking.renter.fullName}
+                  </button>
                   <div className="text-xs text-slate-500">{booking.id}</div>
                 </td>
                 <td className="px-4 py-3 text-slate-700">{carName(booking)}</td>

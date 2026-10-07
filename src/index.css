@@ -11,14 +11,22 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    /* Always reserve the scrollbar's space, so the layout doesn't shift
+       sideways when a short tab has no scrollbar and a long one does. */
+    scrollbar-gutter: stable;
   }
 
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
   }
 
-  /* One consistent focus ring everywhere, so keyboard users are never lost. */
+  /* One consistent focus ring everywhere, so keyboard users are never lost.
+     It is a real outline, not a box-shadow ring: outlines draw on every element
+     (box-shadow does nothing on a <tr>) and survive Windows high-contrast mode.
+     Don't add outline-none here: in Tailwind v4 it sets --tw-outline-style to
+     none, which silently cancels every focus-visible:outline-* utility. */
   :focus-visible {
-    @apply ring-2 ring-slate-900 ring-offset-2 ring-offset-slate-50 outline-none;
+    outline: 2px solid var(--color-slate-900);
+    outline-offset: 2px;
   }
 }

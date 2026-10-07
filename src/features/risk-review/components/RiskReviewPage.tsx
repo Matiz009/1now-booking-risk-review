@@ -39,15 +39,8 @@ const EMPTY_TEXT: Record<BookingStatus, { title: string; description: string }> 
  * here is UI-only: which tab is open, and which toasts are showing.
  */
 export function RiskReviewPage() {
-  const {
-    scoredBookings,
-    loadStatus,
-    loadError,
-    pendingIds,
-    reload,
-    apiSettings,
-    updateApiSettings,
-  } = useBookings();
+  const { scoredBookings, loadStatus, pendingIds, reload, apiSettings, updateApiSettings } =
+    useBookings();
   const [activeTab, setActiveTab] = useState<BookingStatus>('needs_review');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const nextToastId = useRef(1);
@@ -103,7 +96,7 @@ export function RiskReviewPage() {
       {loadStatus === 'error' && (
         <ErrorState
           title="Couldn’t load bookings"
-          message={loadError ?? 'Something went wrong.'}
+          message="Check your connection and try again."
           onRetry={reload}
         />
       )}
@@ -120,12 +113,17 @@ export function RiskReviewPage() {
             {visible.length === 0 ? (
               <EmptyState {...EMPTY_TEXT[activeTab]} />
             ) : (
-              <BookingTable
-                items={visible}
-                caption={`${STATUS_LABELS[activeTab]} bookings`}
-                pendingIds={pendingIds}
-                onSelect={handleSelect}
-              />
+              <>
+                <p className="mb-3 text-sm text-slate-600">
+                  Sorted by risk · bookings awaiting ID checks first
+                </p>
+                <BookingTable
+                  items={visible}
+                  caption={`${STATUS_LABELS[activeTab]} bookings`}
+                  pendingIds={pendingIds}
+                  onSelect={handleSelect}
+                />
+              </>
             )}
           </div>
         </section>
