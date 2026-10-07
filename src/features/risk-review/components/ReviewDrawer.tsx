@@ -218,8 +218,8 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
       </div>
 
       {!isFinal && (
-        // pb-20 below md keeps the actions clear of the collapsed demo controls.
-        <footer className="space-y-3 border-t border-slate-200 p-4 pb-20 md:pb-4">
+        // pb-24 below md keeps a 12px gap between the actions and the collapsed demo controls.
+        <footer className="space-y-3 border-t border-slate-200 p-4 pb-24 md:pb-4">
           {error && (
             <p
               role="alert"
