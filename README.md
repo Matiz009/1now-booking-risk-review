@@ -2,7 +2,7 @@
 
 A fraud-review queue for direct car rental bookings, built as a take-home for 1Now.
 
-**Live demo:** https://1now-booking-risk-review.vercel.app/ · **Walkthrough:** [LOOM LINK]
+**Live demo:** https://1now-booking-risk-review.vercel.app/ · **Walkthrough:** [https://www.loom.com/share/77d2a61112824110bf1327516313784c]
 
 **How I directed Claude Code:** [CLAUDE.md](CLAUDE.md) (rules), [PLAN.md](PLAN.md) (phases), [JOURNEY.md](JOURNEY.md) (what went wrong and how I steered).
 
