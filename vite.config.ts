@@ -19,6 +19,12 @@ export default defineConfig({
     // so a reader can always see where a test helper comes from.
     globals: false,
     css: false,
+    // Worker threads instead of the default child processes. On a Windows
+    // machine low on memory, with on-access antivirus scanning, a forked worker
+    // could take longer than Vitest's fixed 60 s to start, and whole test files
+    // failed with "Failed to start forks worker". Threads don't spawn a new
+    // node.exe per worker and use less memory.
+    pool: 'threads',
     // `npm run test:coverage`. Measures app code only: tests, test setup and
     // the entry file (which only mounts <App />) are left out.
     coverage: {
