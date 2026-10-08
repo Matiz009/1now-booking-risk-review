@@ -38,11 +38,13 @@ async function openBooking(user: User, renter: string) {
  * the drawer before the API answers, so the failure can't be shown inline.
  */
 async function leaveErrorToast(user: User) {
-  configureApi({ failUpdate: true, delayMs: 50 });
+  // 500 ms, not less: Esc must land before the API answers, and under load
+  // (coverage, parallel workers) a 50 ms window was sometimes missed.
+  configureApi({ failUpdate: true, delayMs: 500 });
   const drawer = await openBooking(user, 'Dana Whitfield');
   await user.click(within(drawer).getByRole('button', { name: /^Approve/ }));
   await user.keyboard('{Escape}');
-  await screen.findByText(/Couldn’t approve BK-1001/);
+  await screen.findByText(/Couldn’t approve BK-1001/, {}, { timeout: 3000 });
   configureApi({ failUpdate: false, delayMs: 0 });
 }
 
@@ -141,7 +143,8 @@ describe('Review drawer', () => {
   });
 
   it('disables the actions and labels the one being saved while the update is in flight', async () => {
-    configureApi({ delayMs: 50 });
+    // Long enough that the assertions below run before the API answers, even under load.
+    configureApi({ delayMs: 500 });
     const user = await renderLoaded();
     const drawer = await openBooking(user, 'Dana Whitfield');
 
@@ -150,7 +153,7 @@ describe('Review drawer', () => {
     expect(within(drawer).getByRole('button', { name: 'Approving…' })).toBeDisabled();
     expect(within(drawer).getByRole('button', { name: 'Request verification' })).toBeDisabled();
     expect(within(drawer).getByRole('button', { name: 'Decline' })).toBeDisabled();
-    expect(await screen.findByText('BK-1001 approved.')).toBeInTheDocument();
+    expect(await screen.findByText('BK-1001 approved.', {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
   it('disables Approve for BK-1009 while its ID check is pending, with the reason shown', async () => {

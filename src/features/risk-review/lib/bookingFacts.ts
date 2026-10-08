@@ -1,7 +1,7 @@
 import { daysBetween, minutesBetween } from '@/lib/datetime';
 import { formatCurrency } from '@/lib/format';
 import type { Booking, IdCheckStatus, PaymentType } from '../types';
-import { describeDays, describeMinutes } from './scoreBooking';
+import { describeDays, describeMinutes, describeTripLength } from './scoreBooking';
 
 /** One row of evidence, e.g. { label: 'Past trips', value: '0' }. */
 export type BookingFact = {
@@ -35,7 +35,7 @@ export function bookingFacts(booking: Booking): BookingFact[] {
 
   const accountAgeDays = daysBetween(new Date(renter.accountCreatedAt), createdAt);
   const leadMinutes = minutesBetween(createdAt, pickupAt);
-  const tripDays = Math.floor(daysBetween(pickupAt, new Date(booking.returnAt)));
+  const tripDays = daysBetween(pickupAt, new Date(booking.returnAt));
 
   return [
     { label: 'ID check', value: ID_CHECK_LABELS[booking.idCheck] },
@@ -45,6 +45,6 @@ export function bookingFacts(booking: Booking): BookingFact[] {
     { label: 'Past trips', value: String(renter.pastTripCount) },
     { label: 'Pickup', value: `${describeMinutes(leadMinutes)} after booking` },
     { label: 'Daily rate', value: `${formatCurrency(car.dailyRate)}/day` },
-    { label: 'Trip length', value: tripDays === 1 ? '1 day' : `${tripDays} days` },
+    { label: 'Trip length', value: describeTripLength(tripDays) },
   ];
 }

@@ -202,7 +202,7 @@ it appears in the video.
 
 Final placement QA: 14/15 passed. Only a 4px overlap of the collapsed dock on the mobile Decline button remained; fixed with extra footer padding.
 
-One test run failed with 11 errors and passed on re-run without the errors being captured. I didn't accept 'flaky' as an answer: I made Claude Code run the suite 5 times in a row; all 5 passed (182/182), so I treated it as a one-off environment issue, most likely a parallel run.
+One test run failed with 11 errors and passed on re-run without the errors being captured. It wasn't a one-off: it recurred on cold runs in the later QA session (first run: 11 errors, only 5 of 16 files ran). Five cache-cleared runs passed, but a later run captured the error: `[vitest-pool]: Failed to start forks worker … Timeout waiting for worker to respond`. Cause: each test file got a forked node.exe worker, and on this machine (about 0.7 GB free RAM, pagefile in use, on-access antivirus) a worker sometimes took longer than Vitest's fixed 60 s to report it had started. Fix: `pool: 'threads'` in vite.config.ts (no process per worker, less memory). Three cold runs after the fix all passed; because the failure was intermittent, that is evidence, not proof.
 
 ---
 
@@ -223,3 +223,13 @@ README written last, leading with the operator's problem; assumptions and cuts s
 - **Choosing Vite + React over Next.js.** One screen with mock data doesn't
   need routing or a server, and I wanted to stay within code I could change
   confidently.
+
+---
+
+## QA pass
+
+An independent QA pass, run from a fresh Claude Code session, tested the app
+against the spec (README, CLAUDE.md, this journal) rather than the code. It
+mapped every rule to a test in TEST_CASES.md and found 6 low-severity bugs:
+5 fixed, 1 documented as a known limitation. Playwright was added because
+jsdom can't see layout, overlap or focus rings.

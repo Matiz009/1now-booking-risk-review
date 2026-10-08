@@ -6,6 +6,7 @@ import {
   resetApi,
   updateBookingStatus,
 } from '../api/bookingsApi';
+import { declineReasonLength } from '../lib/declineReason';
 import { recommendAction } from '../lib/recommendAction';
 import { DECLINE_REASON_MIN_LENGTH } from '../lib/risk.config';
 import { scoreBooking } from '../lib/scoreBooking';
@@ -186,7 +187,7 @@ export function useBookings() {
       }
 
       const reason = nextStatus === 'declined' ? (declineReason?.trim() ?? '') : null;
-      if (reason !== null && reason.length < DECLINE_REASON_MIN_LENGTH) {
+      if (reason !== null && declineReasonLength(reason) < DECLINE_REASON_MIN_LENGTH) {
         return {
           ok: false,
           message: `Give a reason of at least ${DECLINE_REASON_MIN_LENGTH} characters to decline.`,

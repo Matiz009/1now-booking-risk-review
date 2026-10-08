@@ -21,6 +21,8 @@ type ReviewDrawerProps = {
   isPending: boolean;
   /** Why the last update from this drawer failed, shown inline. Null when it didn't. */
   error: string | null;
+  /** Clears `error`, e.g. when the operator cancels the decline it was about. */
+  onDismissError: () => void;
   onClose: () => void;
   onAction: (bookingId: string, next: BookingStatus, declineReason: string | null) => void;
   /** Called once the drawer has closed, to put focus back where it belongs. */
@@ -36,6 +38,7 @@ export function ReviewDrawer({
   item,
   isPending,
   error,
+  onDismissError,
   onClose,
   onAction,
   onRestoreFocus,
@@ -74,6 +77,7 @@ export function ReviewDrawer({
               item={item}
               isPending={isPending}
               error={error}
+              onDismissError={onDismissError}
               onAction={onAction}
             />
           )}
@@ -87,13 +91,14 @@ type DrawerBodyProps = {
   item: ScoredBooking;
   isPending: boolean;
   error: string | null;
+  onDismissError: () => void;
   onAction: ReviewDrawerProps['onAction'];
 };
 
 /** The change this drawer started: where the booking was, and where it's going. */
 type Acted = { from: BookingStatus; to: BookingStatus };
 
-function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
+function DrawerBody({ item, isPending, error, onDismissError, onAction }: DrawerBodyProps) {
   const { booking, risk } = item;
   const id = useId();
   const [isDeclining, setIsDeclining] = useState(false);
@@ -208,7 +213,7 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
               . This decision is final.
             </p>
             {booking.declineReason && (
-              <p className="text-muted text-sm">
+              <p className="text-muted text-sm wrap-anywhere">
                 <span className="text-ink font-medium">Reason: </span>
                 {booking.declineReason}
               </p>
@@ -232,7 +237,12 @@ function DrawerBody({ item, isPending, error, onAction }: DrawerBodyProps) {
             <DeclineReasonForm
               isPending={isPending}
               onSubmit={(reason) => submit('declined', reason)}
-              onCancel={() => setIsDeclining(false)}
+              onCancel={() => {
+                setIsDeclining(false);
+                // A failed decline's error says the typed reason is kept. Cancel
+                // discards that reason, so the message would no longer be true.
+                onDismissError();
+              }}
             />
           ) : (
             <ActionBar
