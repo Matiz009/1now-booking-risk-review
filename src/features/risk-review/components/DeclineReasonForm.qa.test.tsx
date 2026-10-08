@@ -102,14 +102,13 @@ describe('Decline reason', () => {
     expect(onSubmit).toHaveBeenCalledWith(long);
   });
 
-  // BUG (low): the rule is "at least 10 characters", but the count is UTF-16
-  // code units. Five car emoji are 5 characters to the operator, yet count as
-  // 10 and pass. The same rule is used by the hook and the mock API.
-  it.fails('counts characters as people see them, not UTF-16 units', async () => {
+  // AC-17, was a bug: the count was UTF-16 code units, so five emoji passed.
+  it('counts characters as people see them, not UTF-16 units', async () => {
     const { user, reason, confirm, onSubmit } = renderForm();
 
     await user.click(reason);
     await user.paste('🚗🚗🚗🚗🚗');
+    expect(screen.getByText('5 / 10 characters minimum')).toBeInTheDocument();
     await confirm();
 
     expect(onSubmit).not.toHaveBeenCalled();

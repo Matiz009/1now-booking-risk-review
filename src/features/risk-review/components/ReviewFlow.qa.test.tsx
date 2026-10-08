@@ -423,10 +423,8 @@ describe('Failures', () => {
     expectCounts(9, 1, 1, 1);
   });
 
-  // BUG (low): after a failed decline the alert says "Your reason is kept".
-  // If the operator then presses Cancel and Decline again, the reason box is
-  // empty but the same alert is still on screen, now saying something untrue.
-  it.fails('FL-10: does not claim the reason is kept once it has been discarded', async () => {
+  // Was a bug: after Cancel the box was empty but the alert still said the reason was kept.
+  it('FL-10: does not claim the reason is kept once it has been discarded', async () => {
     configureApi({ failUpdate: true });
     const user = await renderLoaded();
     const drawer = await openBooking(user, 'Jordan Alcott');

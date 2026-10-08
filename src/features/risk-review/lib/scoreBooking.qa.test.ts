@@ -69,14 +69,17 @@ describe('RS-13: trip length on part days', () => {
     ).toBeDefined();
   });
 
-  // BUG (low): a 14.5-day trip fires "Trip longer than 14 days" but its
-  // evidence reads "14-day trip", so the evidence contradicts the rule it
-  // supports. (README also says the rule is "15 days or more", which
-  // disagrees with CLAUDE.md's "longer than 14 days" for part days.)
-  it.fails('gives evidence that does not contradict the rule label', () => {
+  // Was a bug: a 14.5-day trip's evidence read "14-day trip", contradicting the rule.
+  it('gives evidence that does not contradict the rule label', () => {
     const fired = signal(booking({ tripMinutes: 14 * MINUTES_PER_DAY + 12 * 60 }), 'long_trip');
     expect(fired?.label).toBe('Trip longer than 14 days');
     expect(fired?.detail).not.toBe('14-day trip');
+    expect(fired?.detail).toBe('Trip of 14 days 12 h');
+  });
+
+  it('shows even one minute over 14 days in the evidence', () => {
+    const fired = signal(booking({ tripMinutes: 14 * MINUTES_PER_DAY + 1 }), 'long_trip');
+    expect(fired?.detail).toBe('Trip of 14 days 1 min');
   });
 });
 
@@ -129,7 +132,7 @@ describe('RS-23: evidence for every signal', () => {
     [{ nameOnId: 'S. Okafor' }, 'name_mismatch', 'ID says “S. Okafor”, booking says “Sam Okafor”'],
     [{ paymentType: 'prepaid_card' as const }, 'prepaid_card', 'Paid with a prepaid card'],
     [{ pastTripCount: 0 }, 'first_time_renter', 'No completed trips'],
-    [{ tripMinutes: 21 * MINUTES_PER_DAY }, 'long_trip', '21-day trip'],
+    [{ tripMinutes: 21 * MINUTES_PER_DAY }, 'long_trip', 'Trip of 21 days'],
     [{ dailyRate: 150 }, 'high_value_car', '2024 Kia Niro at $150/day'],
   ])('%o → %s: "%s"', (overrides, id, detail) => {
     expect(signal(booking(overrides), id)?.detail).toBe(detail);

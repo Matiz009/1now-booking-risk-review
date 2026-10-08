@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
+import { declineReasonLength } from '../lib/declineReason';
 import { DECLINE_REASON_MIN_LENGTH } from '../lib/risk.config';
 
 type DeclineReasonFormProps = {
@@ -19,7 +20,7 @@ export function DeclineReasonForm({ isPending, onSubmit, onCancel }: DeclineReas
   // The error waits for the first submit, so nobody is told off while still typing.
   const [showError, setShowError] = useState(false);
 
-  const length = reason.trim().length;
+  const length = declineReasonLength(reason);
   const isTooShort = length < DECLINE_REASON_MIN_LENGTH;
   const hasError = showError && isTooShort;
 

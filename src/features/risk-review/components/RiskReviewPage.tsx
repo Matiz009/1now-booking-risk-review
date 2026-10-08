@@ -254,6 +254,7 @@ export function RiskReviewPage() {
         item={selected}
         isPending={selected !== null && pendingIds.includes(selected.booking.id)}
         error={drawerError}
+        onDismissError={() => setDrawerError(null)}
         onClose={handleClose}
         onAction={handleAction}
         onRestoreFocus={restoreFocus}

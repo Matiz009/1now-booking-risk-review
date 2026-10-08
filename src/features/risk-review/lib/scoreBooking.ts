@@ -131,7 +131,7 @@ function collectSignals(booking: Booking): RiskSignal[] {
       id: 'long_trip',
       label: `Trip longer than ${SIGNAL_THRESHOLDS.longTripDays} days`,
       points: SIGNAL_POINTS.long_trip,
-      detail: `${Math.floor(tripDays)}-day trip`,
+      detail: `Trip of ${describeTripLength(tripDays)}`,
     });
   }
 
@@ -146,6 +146,30 @@ export function describeDays(days: number): string {
     return 'less than a day';
   }
   return whole === 1 ? '1 day' : `${whole} days`;
+}
+
+const MINUTES_PER_DAY = 24 * 60;
+
+/**
+ * A trip's exact length: 21 → "21 days", 1 → "1 day", 14.5 → "14 days 12 h",
+ * 14 days + 1 minute → "14 days 1 min". Never rounded down to whole days, so
+ * evidence for "longer than 14 days" can't read as exactly 14. Also used by
+ * bookingFacts.
+ */
+export function describeTripLength(days: number): string {
+  const totalMinutes = Math.round(days * MINUTES_PER_DAY);
+  const wholeDays = Math.floor(totalMinutes / MINUTES_PER_DAY);
+  const hours = Math.floor((totalMinutes % MINUTES_PER_DAY) / 60);
+  const minutes = totalMinutes % 60;
+
+  const parts = [wholeDays === 1 ? '1 day' : `${wholeDays} days`];
+  if (hours > 0) {
+    parts.push(`${hours} h`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes} min`);
+  }
+  return parts.join(' ');
 }
 
 /** 45 → "45 minutes", 90 → "1.5 hours", 120 → "2 hours". Also used by bookingFacts. */

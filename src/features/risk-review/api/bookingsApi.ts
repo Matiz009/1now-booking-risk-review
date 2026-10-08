@@ -1,4 +1,5 @@
 import { mockBookings } from '../data/bookings.mock';
+import { declineReasonLength } from '../lib/declineReason';
 import { DECLINE_REASON_MIN_LENGTH } from '../lib/risk.config';
 import { canTransition, nextStatuses } from '../lib/transitions';
 import type { ApiConfig, Booking, BookingStatus } from '../types';
@@ -72,7 +73,7 @@ export async function updateBookingStatus(
   }
 
   const reason = declineReason?.trim() ?? '';
-  if (nextStatus === 'declined' && reason.length < DECLINE_REASON_MIN_LENGTH) {
+  if (nextStatus === 'declined' && declineReasonLength(reason) < DECLINE_REASON_MIN_LENGTH) {
     throw new Error(
       `A decline reason of at least ${DECLINE_REASON_MIN_LENGTH} characters is required.`,
     );

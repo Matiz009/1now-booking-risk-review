@@ -71,12 +71,9 @@ test.describe('360px layout', () => {
     await expect(page.getByRole('table')).toBeHidden();
   });
 
-  // BUG (low): the "Reason:" line in a declined booking's drawer doesn't wrap
-  // long words. A 200-character unbroken reason (a pasted URL or reference
-  // number) runs off the right edge and the drawer body scrolls sideways
-  // (1543px of content in a 345px box at 360px wide).
+  // Was a bug (RW-08): a 200-character unbroken reason ran off the right edge
+  // and the drawer body scrolled sideways.
   test('a long unbroken decline reason wraps inside the drawer', async ({ page }) => {
-    test.fail();
     await openQueue(page);
     const word = 'x'.repeat(200);
     const dialog = await openBooking(page, 'Jordan Alcott');
