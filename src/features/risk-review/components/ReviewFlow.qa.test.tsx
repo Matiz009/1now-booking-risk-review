@@ -441,11 +441,9 @@ describe('Failures', () => {
 });
 
 describe('Demo controls', () => {
-  // BUG (low, demo-only) or spec ambiguity: README says Reload data
-  // "refetches what the mock server holds now". After Load empty data the
-  // server still holds 12 bookings, but Reload keeps returning none, because
-  // Load empty data leaves a hidden switch on that only Reset clears.
-  it.fails('DC-07: Reload data after Load empty data brings the bookings back', async () => {
+  // The README now says what Reload data does after Load empty data: the
+  // empty switch stays on, so Reload keeps returning nothing until Reset.
+  it('DC-07: Reload data after Load empty data stays empty until Reset demo data', async () => {
     const user = await renderLoaded();
     const demo = screen.getByRole('complementary', { name: 'Demo controls' });
 
@@ -453,6 +451,10 @@ describe('Demo controls', () => {
     await screen.findByRole('heading', { name: 'Nothing to review' });
     await user.click(within(demo).getByRole('button', { name: 'Reload data' }));
 
+    expect(await screen.findByRole('heading', { name: 'Nothing to review' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Needs review 0' })).toBeInTheDocument();
+
+    await user.click(within(demo).getByRole('button', { name: 'Reset demo data' }));
     expect(await screen.findByRole('tab', { name: 'Needs review 9' })).toBeInTheDocument();
   });
 
