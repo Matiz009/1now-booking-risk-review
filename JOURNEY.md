@@ -223,3 +223,13 @@ README written last, leading with the operator's problem; assumptions and cuts s
 - **Choosing Vite + React over Next.js.** One screen with mock data doesn't
   need routing or a server, and I wanted to stay within code I could change
   confidently.
+
+---
+
+## QA pass
+
+An independent QA pass, run from a fresh Claude Code session, tested the app
+against the spec (README, CLAUDE.md, this journal) rather than the code. It
+mapped every rule to a test in TEST_CASES.md and found 6 low-severity bugs:
+5 fixed, 1 documented as a known limitation. Playwright was added because
+jsdom can't see layout, overlap or focus rings.

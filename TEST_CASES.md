@@ -51,7 +51,7 @@ automated test named in the last column.
 | RS-10 | Account-age edge                                 | Clean booking                                | Account age 7 days − 1 min, then exactly 7 days                      | Under 7 days flagged, exactly 7 not                                                                                     | unit      | `score` › signal edges                                                               | Covered      |
 | RS-11 | Daily-rate edge                                  | Clean booking                                | Rate $149, then $150                                                 | $149 not flagged, $150 flagged                                                                                          | unit      | `score` › signal edges                                                               | Covered      |
 | RS-12 | Trip-length edge (whole days)                    | Clean booking                                | Trip exactly 14 days, then 15 days                                   | 14 not flagged, 15 flagged                                                                                              | unit      | `score` › signal edges                                                               | Covered      |
-| RS-13 | Trip-length edge (part days)                     | Clean booking                                | Trip 14 days + 1 minute, then 14 days + 12 h                         | Both are "longer than 14 days" (CLAUDE.md), so the signal fires; its evidence text must not contradict the rule's label | unit      | QA: `lib/scoreBooking.qa.test.ts`                                                    | Bug          |
+| RS-13 | Trip-length edge (part days)                     | Clean booking                                | Trip 14 days + 1 minute, then 14 days + 12 h                         | Both are "longer than 14 days" (CLAUDE.md), so the signal fires; its evidence text must not contradict the rule's label | unit      | QA: `lib/scoreBooking.qa.test.ts`                                                    | Covered (QA) |
 | RS-14 | Name matching tolerates case and spacing only    | —                                            | Compare "Jordan Alcott" with "jordan alcott ", "J. Alcott", "Jordon" | Case/spacing match; initials, extra surnames and spelling differences mismatch                                          | unit      | `score` › name matching                                                              | Covered      |
 | RS-15 | No name mismatch while name on ID is unknown     | ID check failed or passed, name on ID `null` | Score                                                                | No `name_mismatch` signal (nothing to compare)                                                                          | unit      | QA: `lib/scoreBooking.qa.test.ts`                                                    | Covered (QA) |
 | RS-16 | Points of fired signals add up                   | Clean booking                                | Prepaid + 0 trips + $165/day                                         | 35, medium                                                                                                              | unit      | `score` › adds the points                                                            | Covered      |
@@ -164,7 +164,7 @@ automated test named in the last column.
 | AC-14 | A second update while one is in flight is refused    | Update in flight | Call `updateStatus` again for the same booking after a re-render     | `ok: false`, "still being updated"                                                                | unit            | `hook` › refuses a second update to a booking that is still in flight                                                                              | Covered      |
 | AC-15 | Two updates to one booking in the same tick          | Fresh data       | Call `updateStatus` twice for BK-1001 before React re-renders        | The second is refused, so there's one snapshot and one API call                                   | unit            | QA: `hooks/useBookings.qa.test.ts`                                                                                                                 | Bug          |
 | AC-16 | Hook input edge cases                                | Fresh data       | Unknown id; decline with `null` reason; approve with a reason passed | "not found"; blocked; approved with `declineReason` null                                          | unit            | QA: `hooks/useBookings.qa.test.ts`                                                                                                                 | Covered (QA) |
-| AC-17 | Reason length counts characters people see           | Reason form open | Paste five car emoji → Confirm decline                               | 5 characters is under 10, so blocked                                                              | component       | QA: `components/DeclineReasonForm.qa.test.tsx`                                                                                                     | Bug          |
+| AC-17 | Reason length counts characters people see           | Reason form open | Paste five car emoji → Confirm decline                               | 5 characters is under 10, so blocked                                                              | component       | QA: `components/DeclineReasonForm.qa.test.tsx`                                                                                                     | Covered (QA) |
 
 ## 7. Failures
 
@@ -179,7 +179,7 @@ automated test named in the last column.
 | FL-07 | Error toasts survive opening a drawer; success toasts don't | An error and a success toast up | Open a booking                                          | Success toast cleared; error toast stays                                                                                       | component      | `drawer` › clears success toasts                                | Covered      |
 | FL-08 | Toast timing                                                | —                               | Show a toast; hover; focus; wait 5 s                    | Auto-dismiss after 5 s; pauses on hover and focus; × dismisses                                                                 | component      | `toast`                                                         | Covered      |
 | FL-09 | Duplicate toasts don't stack                                | —                               | Show the same message twice                             | One toast                                                                                                                      | unit           | `toast` › replaces a toast with the same message                | Covered      |
-| FL-10 | Cancelled reason isn't claimed as kept                      | FL-03 done                      | Cancel the reason form → Decline again                  | The form is empty, so no message may still say "Your reason is kept"                                                           | component      | QA: `components/ReviewFlow.qa.test.tsx`                         | Bug          |
+| FL-10 | Cancelled reason isn't claimed as kept                      | FL-03 done                      | Cancel the reason form → Decline again                  | The form is empty, so no message may still say "Your reason is kept"                                                           | component      | QA: `components/ReviewFlow.qa.test.tsx`                         | Covered (QA) |
 | FL-11 | Focus stays in the drawer after a failed save               | FL-03 setup                     | Confirm decline by keyboard; wait for the failure       | Focus is inside the dialog, so the next Tab stays in it                                                                        | E2E            | QA: `e2e/failures.spec.ts`                                      | Covered (QA) |
 | FL-12 | Reload while an update is in flight                         | Delay 2000 ms                   | Approve; Reload data before it answers                  | Known limitation (README §8): an older snapshot can overwrite fresh data. Not automated; listed as risk                        | manual         | —                                                               | Gap          |
 | FL-13 | Load failure after the queue was shown                      | Queue loaded                    | Tick Fail loading bookings → Reload data                | Error state with Retry                                                                                                         | component      | `page` › lets the demo controls force a load failure            | Covered      |
@@ -195,7 +195,7 @@ automated test named in the last column.
 | DC-04 | Reload data keeps saved decisions    | One booking approved             | Reload data                                          | Approved 2 after the reload                                                                      | component         | `page` › reloads the current data                            | Covered      |
 | DC-05 | Load empty data                      | Queue loaded                     | Load empty data                                      | "Nothing to review", Needs review 0                                                              | component         | `page` › load an empty queue                                 | Covered      |
 | DC-06 | Reset demo data                      | Decisions made, switches changed | Reset demo data                                      | 9/1/1/1; Fail switches unticked; delay 600                                                       | component, E2E    | `page` › reloads … resets; QA: `e2e/demo-controls.spec.ts`   | Covered      |
-| DC-07 | Reload data after Load empty data    | Load empty data done             | Reload data                                          | README: Reload "refetches what the mock server holds now", so the 9/1/1/1 bookings come back     | component         | QA: `components/ReviewFlow.qa.test.tsx`                      | Bug          |
+| DC-07 | Reload data after Load empty data    | Load empty data done             | Reload data                                          | Still empty (the switch stays on, as the README says); Reset demo data brings back 9/1/1/1       | component         | QA: `components/ReviewFlow.qa.test.tsx`                      | Covered (QA) |
 | DC-08 | Reset recovers from a load error     | Fail loading on, error showing   | Reset demo data                                      | Queue back with 9/1/1/1; Fail loading unticked                                                   | component         | QA: `components/ReviewFlow.qa.test.tsx`                      | Covered (QA) |
 | DC-09 | Collapse rules                       | —                                | 390 px load; 800 px open drawer; 1280 px open drawer | Phone: collapsed, stays collapsed over drawer, expands by hand. 800: collapses. 1280: stays open | component         | `page` › Demo controls placement                             | Covered      |
 | DC-10 | Usable with the drawer open          | Drawer open                      | Tick a switch                                        | Switch toggles; drawer stays open                                                                | component         | `drawer` › stays open … demo controls                        | Covered      |
@@ -215,7 +215,7 @@ means `document.documentElement.scrollWidth <= window.innerWidth`.
 | RW-05 | 768 px: dock never covers the drawer's buttons    | Fresh data    | Open BK-1007; compare boxes as RW-03                                                                | No overlap (JOURNEY #11)                                         | E2E  | QA: `e2e/responsive.spec.ts` | Covered (QA) |
 | RW-06 | 800 px: dock collapses beside the drawer          | Fresh data    | Open BK-1007                                                                                        | Dock collapsed, no overlap with the drawer, no horizontal scroll | E2E  | QA: `e2e/responsive.spec.ts` | Covered (QA) |
 | RW-07 | 1280 px: no horizontal scroll; dock beside drawer | Fresh data    | Load; open BK-1007                                                                                  | No scroll; dock stays expanded and doesn't overlap the drawer    | E2E  | QA: `e2e/responsive.spec.ts` | Covered (QA) |
-| RW-08 | Long unbroken decline reason fits the drawer      | 360 px        | Decline with a 200-character word; open it in Declined                                              | The reason wraps; the drawer has no horizontal scroll            | E2E  | QA: `e2e/responsive.spec.ts` | Bug          |
+| RW-08 | Long unbroken decline reason fits the drawer      | 360 px        | Decline with a 200-character word; open it in Declined                                              | The reason wraps; the drawer has no horizontal scroll            | E2E  | QA: `e2e/responsive.spec.ts` | Covered (QA) |
 
 ## 10. Accessibility
 
@@ -240,17 +240,17 @@ means `document.documentElement.scrollWidth <= window.innerWidth`.
 
 | Area                  | Rows    | Covered (before QA) | Covered (QA) | Bug   | Gap (manual) |
 | --------------------- | ------- | ------------------- | ------------ | ----- | ------------ |
-| 1. Risk scoring       | 25      | 21                  | 3            | 1     | 0            |
+| 1. Risk scoring       | 25      | 21                  | 4            | 0     | 0            |
 | 2. Recommendations    | 14      | 7                   | 7            | 0     | 0            |
 | 3. Status transitions | 12      | 7                   | 5            | 0     | 0            |
 | 4. Queue              | 18      | 13                  | 5            | 0     | 0            |
 | 5. Drawer             | 15      | 8                   | 7            | 0     | 0            |
-| 6. Actions            | 17      | 4                   | 11           | 2     | 0            |
-| 7. Failures           | 14      | 8                   | 4            | 1     | 1            |
-| 8. Demo controls      | 11      | 8                   | 1            | 1     | 1            |
-| 9. Responsive         | 8       | 0                   | 7            | 1     | 0            |
+| 6. Actions            | 17      | 4                   | 12           | 1     | 0            |
+| 7. Failures           | 14      | 8                   | 5            | 0     | 1            |
+| 8. Demo controls      | 11      | 8                   | 2            | 0     | 1            |
+| 9. Responsive         | 8       | 0                   | 8            | 0     | 0            |
 | 10. Accessibility     | 12      | 7                   | 3            | 0     | 2            |
-| **Total**             | **146** | **83**              | **53**       | **6** | **4**        |
+| **Total**             | **146** | **83**              | **58**       | **1** | **4**        |
 
 When this document was first written, 83 of 144 rows were covered and 61 were gaps. The pure logic
 in `lib/` was already well covered. The gaps clustered in what an operator does in the drawer
@@ -258,16 +258,17 @@ in `lib/` was already well covered. The gaps clustered in what an operator does 
 CSS (layout, overlap, focus rings), which jsdom can't see. Two rows (AC-17, FL-14) were added while
 testing.
 
-**Bugs found** (each has a failing test marked `it.fails` / `test.fail()`):
+**Bugs found** (6, all low severity). Each was first pinned by a failing test marked `it.fails` /
+`test.fail()`:
 
-| ID    | Severity | Summary                                                                                         |
-| ----- | -------- | ----------------------------------------------------------------------------------------------- |
-| RW-08 | low      | A long unbroken decline reason runs off the drawer and makes it scroll sideways                 |
-| FL-10 | low      | After a failed decline, Cancel discards the reason but the alert still says it is kept          |
-| AC-15 | low      | Two same-tick updates to one booking aren't refused; rollback leaves the client ≠ server        |
-| RS-13 | low      | A 14.5-day trip fires "Trip longer than 14 days" with evidence "14-day trip"; README says "15+" |
-| AC-17 | low      | Reason length counts UTF-16 units: five emoji pass the 10-character minimum                     |
-| DC-07 | low      | Reload data after Load empty data stays empty (demo-only; README wording)                       |
+| ID    | Summary                                                                                         | Outcome                                                          |
+| ----- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| RW-08 | A long unbroken decline reason runs off the drawer and makes it scroll sideways                 | Fixed: the reason wraps; test passes                             |
+| FL-10 | After a failed decline, Cancel discards the reason but the alert still says it is kept          | Fixed: Cancel clears the error; test passes                      |
+| RS-13 | A 14.5-day trip fires "Trip longer than 14 days" with evidence "14-day trip"; README says "15+" | Fixed: evidence shows the exact length; README matches CLAUDE.md |
+| AC-17 | Reason length counts UTF-16 units: five emoji pass the 10-character minimum                     | Fixed: visible characters are counted; test passes               |
+| DC-07 | Reload data after Load empty data stays empty                                                   | Behaviour kept; README corrected; test asserts it                |
+| AC-15 | Two same-tick updates to one booking aren't refused; rollback leaves the client ≠ server        | Documented in README Known limitations; test stays `it.fails`    |
 
 **Still manual:** FL-12 (reload during an in-flight update, a documented limitation), DC-11 (demo
 controls by keyboard while the drawer is open, documented), A11Y-11 (contrast), A11Y-12 (screen
