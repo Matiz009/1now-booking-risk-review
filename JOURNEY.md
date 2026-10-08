@@ -202,7 +202,7 @@ it appears in the video.
 
 Final placement QA: 14/15 passed. Only a 4px overlap of the collapsed dock on the mobile Decline button remained; fixed with extra footer padding.
 
-One test run failed with 11 errors and passed on re-run without the errors being captured. It wasn't a one-off: it recurred on the first run of the later QA session (only 5 of 16 files ran, 11 errors, ~96 s, almost all of it environment setup). Five deliberate cold runs with Vite's and Vitest's caches cleared all passed (182/182), so it is still unreproduced and its cause unconfirmed. The leading suspect is workers timing out at startup: 11 is exactly Vitest's default worker count on this 12-core machine, and that first run had little free memory. No config was changed without a reproduction.
+One test run failed with 11 errors and passed on re-run without the errors being captured. It wasn't a one-off: it recurred on cold runs in the later QA session (first run: 11 errors, only 5 of 16 files ran). Five cache-cleared runs passed, but a later run captured the error: `[vitest-pool]: Failed to start forks worker … Timeout waiting for worker to respond`. Cause: each test file got a forked node.exe worker, and on this machine (about 0.7 GB free RAM, pagefile in use, on-access antivirus) a worker sometimes took longer than Vitest's fixed 60 s to report it had started. Fix: `pool: 'threads'` in vite.config.ts (no process per worker, less memory). Three cold runs after the fix all passed; because the failure was intermittent, that is evidence, not proof.
 
 ---
 
