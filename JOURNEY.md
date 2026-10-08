@@ -202,7 +202,7 @@ it appears in the video.
 
 Final placement QA: 14/15 passed. Only a 4px overlap of the collapsed dock on the mobile Decline button remained; fixed with extra footer padding.
 
-One test run failed with 11 errors and passed on re-run without the errors being captured. I didn't accept 'flaky' as an answer: I made Claude Code run the suite 5 times in a row; all 5 passed (182/182), so I treated it as a one-off environment issue, most likely a parallel run.
+One test run failed with 11 errors and passed on re-run without the errors being captured. It wasn't a one-off: it recurred on the first run of the later QA session (only 5 of 16 files ran, 11 errors, ~96 s, almost all of it environment setup). Five deliberate cold runs with Vite's and Vitest's caches cleared all passed (182/182), so it is still unreproduced and its cause unconfirmed. The leading suspect is workers timing out at startup: 11 is exactly Vitest's default worker count on this 12-core machine, and that first run had little free memory. No config was changed without a reproduction.
 
 ---
 
