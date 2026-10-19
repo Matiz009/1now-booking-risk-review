@@ -25,6 +25,10 @@ export default defineConfig({
     // failed with "Failed to start forks worker". Threads don't spawn a new
     // node.exe per worker and use less memory.
     pool: 'threads',
+    // Threads alone weren't enough: worker startup on a memory-constrained
+    // Windows machine with on-access antivirus can still exceed the fixed 60 s
+    // start timeout. Fewer workers start faster.
+    maxWorkers: 2,
     // `npm run test:coverage`. Measures app code only: tests, test setup and
     // the entry file (which only mounts <App />) are left out.
     coverage: {

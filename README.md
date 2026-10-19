@@ -120,7 +120,7 @@ All out of scope for a one-screen prototype:
 
 Coverage: 99.2% of lines and 96.9% of branches overall; 100% of lines and branches in `lib/`, 95.9% / 94.3% in `hooks/`. The uncovered branches left are defensive code the UI can't reach.
 
-Vitest runs workers as threads (`pool: 'threads'`): on a low-memory Windows machine with on-access antivirus, forked workers sometimes missed Vitest's fixed 60 s start timeout.
+Vitest runs workers as threads (`pool: 'threads'`), at most two at a time (`maxWorkers: 2`): on a low-memory Windows machine with on-access antivirus, workers sometimes missed Vitest's fixed 60 s start timeout, and fewer workers start faster.
 
 ## 10. Next steps
 
