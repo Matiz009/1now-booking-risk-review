@@ -14,6 +14,8 @@ On Turo, the marketplace screens renters for fraud. An operator who takes bookin
 
 A review queue. Every new direct booking gets a risk score from a rule-based engine, along with the signals behind it and a recommended action. The operator makes the final call: **Approve**, **Request verification** or **Decline** (with a required reason). This mirrors the recommend-then-approve pattern of 1Now's Carisma "Gatekeeper": the system suggests, and the operator decides.
 
+**All bookings** (`#/bookings`) is a second, read-only page listing every booking in every status, 5 per page, with the page kept in the URL (`#/bookings?page=2`). A booking that is high risk or failed its ID check shows a red **⚠ N problems** button. It expands to show the signals, their evidence and points, and the score, with a note when the score was capped at 100. A small hash-route hook (`src/lib/useHashRoute.ts`, no router dependency) switches between the two pages, and browser Back/Forward work.
+
 ![The review queue with booking BK-1007 open: high risk, score 65, four signals, and a suggestion to request verification](docs/screenshot.png)
 
 ## 3. How it works
@@ -81,7 +83,7 @@ npm run test:e2e       # Playwright in Chromium, against the production build on
 
 ## 6. Decisions and trade-offs
 
-- **Vite + React, not Next.js.** It's one screen with mock data, so routing and a server add nothing. I wanted to stay within code I could change confidently. The components would port directly to Next.js.
+- **Vite + React, not Next.js.** It's two screens with mock data, so a router and a server add nothing; a small hash-route hook covers navigation. I wanted to stay within code I could change confidently. The components would port directly to Next.js.
 - **Rule-based, not AI.** Every point in a score traces back to a named signal, every rule has a unit test, and there's no "AI" label on what is really an `if` statement.
 - **Pure logic, one hook, presentational components.** Scoring, recommendations and allowed status changes are pure functions in `lib/`. `useBookings` owns the data and the API calls. Components only render props.
 - **Optimistic updates with per-booking rollback.** A decision shows immediately. If the save fails, only that booking rolls back, even when several updates are in flight.
@@ -91,7 +93,7 @@ npm run test:e2e       # Playwright in Chromium, against the production build on
 
 ## 7. What I cut and why
 
-All out of scope for a one-screen prototype:
+All out of scope for a two-screen prototype:
 
 - **Auth:** there's one operator and no sensitive data.
 - **Backend/database:** a mock async API with simulated failures exercises the same states.
@@ -99,7 +101,7 @@ All out of scope for a one-screen prototype:
 - **Payments and deposits (Stripe):** the recommendation mentions a higher deposit; taking one is a separate flow.
 - **Messaging:** "Request verification" changes the status but doesn't send an SMS or email.
 - **Carisma/LLM integration:** it needs 1Now's internal APIs; the rule engine is the piece an agent would call.
-- **Next.js routing:** there's only one screen.
+- **Next.js routing / a router library:** two screens are switched by a small hash-route hook.
 
 ## 8. Known limitations
 
@@ -110,7 +112,7 @@ All out of scope for a one-screen prototype:
 
 ## 9. Tests
 
-**263 Vitest tests** (unit + React Testing Library in jsdom) and **25 Playwright tests** (real Chromium). One Vitest test is marked `it.fails` on purpose: it pins the known limitation above. [TEST_CASES.md](TEST_CASES.md) maps every spec rule to the test that covers it.
+**296 Vitest tests** (unit + React Testing Library in jsdom) and **25 Playwright tests** (real Chromium). One Vitest test is marked `it.fails` on purpose: it pins the known limitation above. [TEST_CASES.md](TEST_CASES.md) maps every spec rule to the test that covers it.
 
 - **Risk engine:** every signal and its edge (for example, 179 vs 180 minutes, $149 vs $150, 14 days vs 14 days + 1 minute), every score threshold (29/30, 59/60, 84/85), the capped score, and the pending ID state.
 - **Transitions:** every allowed and blocked status change, in the logic and in the drawer.
