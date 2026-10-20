@@ -49,3 +49,6 @@ export const RECOMMENDATION_THRESHOLDS = {
 
 /** An operator's decline reason must be at least this many characters. */
 export const DECLINE_REASON_MIN_LENGTH = 10;
+
+/** Bookings per page on the All bookings page. */
+export const ALL_BOOKINGS_PAGE_SIZE = 5;
